@@ -1,13 +1,22 @@
+import XBoolean from './std/boolean'
+import XFloat from './std/float'
+import XInteger from './std/integer'
+import XString from './std/string'
+import XTemplateString from './std/templateString'
 import Token, { TokenKind } from './token'
 
-enum Operator {
+export enum UnaryOperator {
+  Negation = '-',
+  Not = '!',
+}
+
+export enum BinaryOperator {
   Addition = '+',
   Subtraction = '-',
   Multiplication = '*',
   Division = '/',
   Equal = '=',
   NotEqual = '!=',
-  Not = '!',
   LessThan = '<',
   LessThanOrEqual = '<=',
   GreaterThan = '>',
@@ -16,24 +25,28 @@ enum Operator {
   And = '&',
 }
 
-const tokenOperatorEquivalents = new Map([
-  [TokenKind.Plus, Operator.Addition],
-  [TokenKind.Minus, Operator.Subtraction],
-  [TokenKind.Star, Operator.Multiplication],
-  [TokenKind.Slash, Operator.Division],
-  [TokenKind.Equal, Operator.Equal],
-  [TokenKind.BangEqual, Operator.NotEqual],
-  [TokenKind.Bang, Operator.Not],
-  [TokenKind.Less, Operator.LessThan],
-  [TokenKind.LessEqual, Operator.LessThanOrEqual],
-  [TokenKind.Greater, Operator.GreaterThan],
-  [TokenKind.GreaterEqual, Operator.GreaterThanOrEqual],
-  [TokenKind.Bar, Operator.Or],
-  [TokenKind.Ampersand, Operator.And]
+const TOKEN_TO_UNARY_OP = new Map([
+  [TokenKind.Minus, UnaryOperator.Negation],
+  [TokenKind.Bang, UnaryOperator.Not]
 ])
 
-export function tokenToOperator (token: Token): Operator {
-  const operator = tokenOperatorEquivalents.get(token.kind)
+const TOKEN_TO_BINARY_OP = new Map([
+  [TokenKind.Plus, BinaryOperator.Addition],
+  [TokenKind.Minus, BinaryOperator.Subtraction],
+  [TokenKind.Star, BinaryOperator.Multiplication],
+  [TokenKind.Slash, BinaryOperator.Division],
+  [TokenKind.Equal, BinaryOperator.Equal],
+  [TokenKind.BangEqual, BinaryOperator.NotEqual],
+  [TokenKind.Less, BinaryOperator.LessThan],
+  [TokenKind.LessEqual, BinaryOperator.LessThanOrEqual],
+  [TokenKind.Greater, BinaryOperator.GreaterThan],
+  [TokenKind.GreaterEqual, BinaryOperator.GreaterThanOrEqual],
+  [TokenKind.Bar, BinaryOperator.Or],
+  [TokenKind.Ampersand, BinaryOperator.And]
+])
+
+export function tokenToUnaryOperator (token: Token): UnaryOperator {
+  const operator = TOKEN_TO_UNARY_OP.get(token.kind)
 
   if (operator === undefined) {
     throw new Error(`Token is not an operator: ${TokenKind[token.kind]}`)
@@ -42,31 +55,39 @@ export function tokenToOperator (token: Token): Operator {
   return operator
 }
 
-export enum Type {
-  Integer = 'integer',
-  Float = 'float',
-  Boolean = 'boolean',
-  String = 'string',
-  TemplateString = 'template_string',
+export function tokenToBinaryOperator (token: Token): BinaryOperator {
+  const operator = TOKEN_TO_BINARY_OP.get(token.kind)
+
+  if (operator === undefined) {
+    throw new Error(`Token is not an operator: ${TokenKind[token.kind]}`)
+  }
+
+  return operator
 }
+
+export type TypedValue
+  = XInteger
+  | XFloat
+  | XBoolean
+  | XString
+  | XTemplateString
 
 export interface Primitive {
   kind: 'primitive'
-  type: Type
-  value: number | boolean | string
+  value: TypedValue
   offset: number
 }
 
 export interface Unary {
   kind: 'unary'
-  operator: Operator
+  operator: UnaryOperator
   operand: Expression
   offset: number
 }
 
 export interface Binary {
   kind: 'binary'
-  operator: Operator
+  operator: BinaryOperator
   left: Expression
   right: Expression
   offset: number
@@ -87,7 +108,7 @@ export type Expression
 export function unary (token: Token, operand: Expression): Unary {
   return {
     kind: 'unary',
-    operator: tokenToOperator(token),
+    operator: tokenToUnaryOperator(token),
     operand,
     offset: token.offset
   }
@@ -99,7 +120,7 @@ export function binary (
   return {
     kind: 'binary',
     left,
-    operator: tokenToOperator(token),
+    operator: tokenToBinaryOperator(token),
     right,
     offset: token.offset
   }
@@ -108,8 +129,7 @@ export function binary (
 export function boolean (token: Token): Primitive {
   return {
     kind: 'primitive',
-    type: Type.Boolean,
-    value: token.literal as boolean,
+    value: new XBoolean(token.literal as boolean),
     offset: token.offset
   }
 }
@@ -117,8 +137,7 @@ export function boolean (token: Token): Primitive {
 export function integer (token: Token): Primitive {
   return {
     kind: 'primitive',
-    type: Type.Integer,
-    value: token.literal as number,
+    value: new XInteger(token.literal as number),
     offset: token.offset
   }
 }
@@ -126,8 +145,7 @@ export function integer (token: Token): Primitive {
 export function float (token: Token): Primitive {
   return {
     kind: 'primitive',
-    type: Type.Float,
-    value: token.literal as number,
+    value: new XFloat(token.literal as number),
     offset: token.offset
   }
 }
@@ -135,8 +153,7 @@ export function float (token: Token): Primitive {
 export function string (token: Token): Primitive {
   return {
     kind: 'primitive',
-    type: Type.String,
-    value: token.literal as string,
+    value: new XString(token.literal as string),
     offset: token.offset
   }
 }
@@ -144,8 +161,7 @@ export function string (token: Token): Primitive {
 export function templateString (token: Token): Primitive {
   return {
     kind: 'primitive',
-    type: Type.TemplateString,
-    value: token.literal as string,
+    value: new XTemplateString(token.literal as string),
     offset: token.offset
   }
 }
