@@ -2,6 +2,10 @@ import { TypedValue } from '../ast'
 import XBoolean from './boolean'
 import XInteger from './integer'
 
+function isNumber (value: unknown): value is XInteger | XFloat {
+  return value instanceof XInteger || value instanceof XFloat
+}
+
 export default class XFloat {
   kind = 'float'
   #value: number
@@ -13,34 +17,22 @@ export default class XFloat {
   get value (): number { return this.#value }
 
   add (value: TypedValue): XFloat {
-    if (!(value instanceof XFloat || value instanceof XInteger)) {
-      throw new TypeError()
-    }
-
+    if (!isNumber(value)) throw new TypeError()
     return new XFloat(this.#value + value.value)
   }
 
   sub (value: TypedValue): XFloat {
-    if (!(value instanceof XFloat || value instanceof XInteger)) {
-      throw new TypeError()
-    }
-
+    if (!isNumber(value)) throw new TypeError()
     return new XFloat(this.#value + value.value)
   }
 
   mult (value: TypedValue): XFloat {
-    if (!(value instanceof XFloat || value instanceof XInteger)) {
-      throw new TypeError()
-    }
-
+    if (!isNumber(value)) throw new TypeError()
     return new XFloat(this.#value * value.value)
   }
 
   div (value: TypedValue): XFloat {
-    if (!(value instanceof XFloat || value instanceof XInteger)) {
-      throw new TypeError()
-    }
-
+    if (!isNumber(value)) throw new TypeError()
     return new XFloat(this.#value / value.value)
   }
 
@@ -49,11 +41,33 @@ export default class XFloat {
   }
 
   eq (value: TypedValue): XBoolean {
-    if (!(value instanceof XInteger || value instanceof XFloat)) {
-      throw new TypeError()
-    }
-
+    if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value === value.value)
+  }
+
+  neq (value: TypedValue): XBoolean {
+    if (!isNumber(value)) throw new TypeError()
+    return new XBoolean(this.#value !== value.value)
+  }
+
+  lt (value: TypedValue): XBoolean {
+    if (!isNumber(value)) throw new TypeError()
+    return new XBoolean(this.#value < value.value)
+  }
+
+  lte (value: TypedValue): XBoolean {
+    if (!isNumber(value)) throw new TypeError()
+    return new XBoolean(this.#value <= value.value)
+  }
+
+  gt (value: TypedValue): XBoolean {
+    if (!isNumber(value)) throw new TypeError()
+    return new XBoolean(this.#value > value.value)
+  }
+
+  gte (value: TypedValue): XBoolean {
+    if (!isNumber(value)) throw new TypeError()
+    return new XBoolean(this.#value >= value.value)
   }
 
   __toString (): string {

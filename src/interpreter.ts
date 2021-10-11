@@ -71,6 +71,27 @@ export default class Interpreter {
       case BinaryOperator.Equal:
         if ('eq' in l) return l.eq(r)
         break
+      case BinaryOperator.NotEqual:
+        if ('neq' in l) return l.neq(r)
+        break
+      case BinaryOperator.LessThan:
+        if ('lt' in l) return l.lt(r)
+        break
+      case BinaryOperator.LessThanOrEqual:
+        if ('lte' in l) return l.lte(r)
+        break
+      case BinaryOperator.GreaterThan:
+        if ('gt' in l) return l.gt(r)
+        break
+      case BinaryOperator.GreaterThanOrEqual:
+        if ('gte' in l) return l.gte(r)
+        break
+      case BinaryOperator.Or:
+        if ('or' in l) return l.or(r)
+        break
+      case BinaryOperator.And:
+        if ('and' in l) return l.and(r)
+        break
     }
 
     throw new TypeError()

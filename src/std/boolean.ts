@@ -15,11 +15,23 @@ export default class XBoolean {
   }
 
   eq (value: TypedValue): XBoolean {
-    if (!(value instanceof XBoolean)) {
-      throw new TypeError()
-    }
-
+    if (!(value instanceof XBoolean)) throw new TypeError()
     return new XBoolean(this.#value === value.value)
+  }
+
+  neq (value: TypedValue): XBoolean {
+    if (!(value instanceof XBoolean)) throw new TypeError()
+    return new XBoolean(this.#value !== value.value)
+  }
+
+  or (value: TypedValue): XBoolean {
+    if (!(value instanceof XBoolean)) throw new TypeError()
+    return new XBoolean(this.#value || value.value)
+  }
+
+  and (value: TypedValue): XBoolean {
+    if (!(value instanceof XBoolean)) throw new TypeError()
+    return new XBoolean(this.#value && value.value)
   }
 
   __toString (): string {
