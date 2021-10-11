@@ -1,8 +1,10 @@
 expression = equality ;
 
-equality = comparison ( ( "=" | "!=" ) comparison )* ;
+equality = bool_op ( ( "=" | "!=" ) bool_op )* ;
 
-comparison = term ( ( "<" | "<=" | ">" | ">=" | "|" | "&" ) term )* ;
+bool_op = comparison ( ( "|" | "&" ) comparison )* ;
+
+comparison = term ( ( "<" | "<=" | ">" | ">=" ) term )* ;
 
 term = factor ( ( "-" | "+" ) factor )* ;
 

@@ -28,9 +28,19 @@ export default class Parser {
   }
 
   #equality (): Expression {
-    let expression: Expression = this.#comparison()
+    let expression: Expression = this.#boolean()
 
     while (this.#match(TokenKind.Equal, TokenKind.BangEqual)) {
+      expression = binary(expression, this.#previous(), this.#boolean())
+    }
+
+    return expression
+  }
+
+  #boolean (): Expression {
+    let expression: Expression = this.#comparison()
+
+    while (this.#match(TokenKind.Bar, TokenKind.Ampersand)) {
       expression = binary(expression, this.#previous(), this.#comparison())
     }
 
@@ -41,8 +51,7 @@ export default class Parser {
     let expression: Expression = this.#term()
 
     while (this.#match(
-      TokenKind.Less, TokenKind.LessEqual, TokenKind.Greater, TokenKind.GreaterEqual,
-      TokenKind.Bar, TokenKind.Ampersand
+      TokenKind.Less, TokenKind.LessEqual, TokenKind.Greater, TokenKind.GreaterEqual
     )) {
       expression = binary(expression, this.#previous(), this.#term())
     }
