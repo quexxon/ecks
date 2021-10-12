@@ -1,13 +1,17 @@
 import {
+  ArrayGroup,
   Binary,
   BinaryOperator,
   Expression,
   Grouping,
   Primitive,
+  SetGroup,
   TypedValue,
   Unary,
   UnaryOperator
 } from './ast'
+import XArray from './std/array'
+import XSet from './std/set'
 
 export default class Interpreter {
   #expression: Expression
@@ -25,6 +29,8 @@ export default class Interpreter {
       case 'grouping': return this.#grouping(expression)
       case 'unary': return this.#unary(expression)
       case 'binary': return this.#binary(expression)
+      case 'array': return this.#array(expression)
+      case 'set': return this.#set(expression)
     }
   }
 
@@ -95,5 +101,13 @@ export default class Interpreter {
     }
 
     throw new TypeError()
+  }
+
+  #array (array: ArrayGroup): TypedValue {
+    return new XArray(array.elements.map(e => this.#evaluate(e)))
+  }
+
+  #set (set: SetGroup): TypedValue {
+    return new XSet(set.elements.map(e => this.#evaluate(e)))
   }
 }

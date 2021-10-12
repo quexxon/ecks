@@ -8,7 +8,9 @@ import {
   binary,
   unary,
   string,
-  templateString
+  templateString,
+  set,
+  array
 } from './ast'
 
 export default class Parser {
@@ -102,6 +104,30 @@ export default class Parser {
       const expression = this.#expression()
       this.#consume(TokenKind.RightParen, 'Expected `)` after expression')
       return grouping(expression, offset)
+    }
+
+    if (this.#match(TokenKind.LeftBracket)) {
+      const offset = this.#previous().offset
+      const elements = []
+      while (!this.#match(TokenKind.RightBracket)) {
+        elements.push(this.#expression())
+        if (this.#isAtEnd()) {
+          throw new Error('Expected closing `]` after expression')
+        }
+      }
+      return array(elements, offset)
+    }
+
+    if (this.#match(TokenKind.SetBracket)) {
+      const offset = this.#previous().offset
+      const elements = []
+      while (!this.#match(TokenKind.RightBracket)) {
+        elements.push(this.#expression())
+        if (this.#isAtEnd()) {
+          throw new Error('Expected closing `]` after expression')
+        }
+      }
+      return set(elements, offset)
     }
 
     throw new Error('WHOOPS!')

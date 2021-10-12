@@ -1,6 +1,8 @@
+import XArray from './std/array'
 import XBoolean from './std/boolean'
 import XFloat from './std/float'
 import XInteger from './std/integer'
+import XSet from './std/set'
 import XString from './std/string'
 import XTemplateString from './std/templateString'
 import Token, { TokenKind } from './token'
@@ -71,6 +73,8 @@ export type TypedValue
   | XBoolean
   | XString
   | XTemplateString
+  | XArray
+  | XSet
 
 export interface Primitive {
   kind: 'primitive'
@@ -99,11 +103,25 @@ export interface Grouping {
   offset: number
 }
 
+export interface ArrayGroup {
+  kind: 'array'
+  elements: Expression[]
+  offset: number
+}
+
+export interface SetGroup {
+  kind: 'set'
+  elements: Expression[]
+  offset: number
+}
+
 export type Expression
   = Unary
   | Binary
   | Primitive
   | Grouping
+  | ArrayGroup
+  | SetGroup
 
 export function unary (token: Token, operand: Expression): Unary {
   return {
@@ -168,4 +186,12 @@ export function templateString (token: Token): Primitive {
 
 export function grouping (expression: Expression, offset: number): Grouping {
   return { kind: 'grouping', expression, offset }
+}
+
+export function array (elements: Expression[], offset: number): ArrayGroup {
+  return { kind: 'array', elements, offset }
+}
+
+export function set (elements: Expression[], offset: number): SetGroup {
+  return { kind: 'set', elements, offset }
 }
