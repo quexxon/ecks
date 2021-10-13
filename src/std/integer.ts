@@ -1,4 +1,5 @@
 import { TypedValue } from '../ast'
+import { MethodType } from '../types'
 import XBoolean from './boolean'
 import XFloat from './float'
 
@@ -9,9 +10,15 @@ function isNumber (value: unknown): value is XInteger | XFloat {
 export default class XInteger {
   kind = 'integer'
   #value: number
+  methods: Record<string, MethodType> = {
+    float: {
+      arguments: [],
+      call: () => new XFloat(this.#value)
+    }
+  }
 
   constructor (value: number) {
-    this.#value = value
+    this.#value = Math.trunc(value)
   }
 
   get value (): number { return this.#value }

@@ -8,11 +8,13 @@ comparison = term ( ( "<" | "<=" | ">" | ">=" ) term )* ;
 
 term = factor ( ( "-" | "+" ) factor )* ;
 
-factor = unary ( ( "/" | "*" ) unary )* ;
+factor = method ( ( "/" | "*" ) method )* ;
+
+method = unary ( "." IDENTIFIER ( "(" ( expression ","? )* ")" )? )* ;
 
 unary = ( "!" | "-" ) unary | primary ;
 
-primary = grouping | number | boolean | string ;
+primary = grouping | number | boolean | string | array ;
 
 grouping = "(" expression ")" ;
 
@@ -48,3 +50,7 @@ boolean = "true" | "false" ;
 string = '"' CHAR* '"'
        | "'" CHAR* "'"
        | "`" ( CHAR | "{" expression "}" )* "`" ;
+
+array = '[' expression* ']'
+
+set = '$[' expression* ']'

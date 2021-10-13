@@ -1,9 +1,17 @@
 import { TypedValue } from '../ast'
+import { MethodType } from '../types'
 import XBoolean from './boolean'
+import XInteger from './integer'
 
 export default class XString {
   kind = 'string'
   #value: string
+  methods: Record<string, MethodType> = {
+    len: {
+      arguments: [],
+      call: () => new XInteger(this.#value.length)
+    }
+  }
 
   constructor (value: string) {
     this.#value = value

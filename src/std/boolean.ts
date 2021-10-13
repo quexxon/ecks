@@ -1,8 +1,16 @@
 import { TypedValue } from '../ast'
+import { MethodType } from '../types'
+import XString from './string'
 
 export default class XBoolean {
   kind = 'boolean'
   #value: boolean
+  methods: Record<string, MethodType> = {
+    str: {
+      arguments: [],
+      call: () => new XString(this.__toString())
+    }
+  }
 
   constructor (value: boolean) {
     this.#value = value

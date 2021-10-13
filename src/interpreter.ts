@@ -4,6 +4,7 @@ import {
   BinaryOperator,
   Expression,
   Grouping,
+  MethodCall,
   Primitive,
   SetGroup,
   TypedValue,
@@ -31,6 +32,7 @@ export default class Interpreter {
       case 'binary': return this.#binary(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
+      case 'method-call': return this.#methodCall(expression)
     }
   }
 
@@ -109,5 +111,19 @@ export default class Interpreter {
 
   #set (set: SetGroup): TypedValue {
     return new XSet(set.elements.map(e => this.#evaluate(e)))
+  }
+
+  #methodCall (methodCall: MethodCall): TypedValue {
+    const receiver = this.#evaluate(methodCall.receiver)
+
+    if (methodCall.identifier.name in receiver.methods) {
+      const method = receiver.methods[methodCall.identifier.name]
+      if (methodCall.arguments.length === method.arguments.length) {
+        return method.call.apply(null, methodCall.arguments.map(exp => this.#evaluate(exp)))
+      }
+      throw new Error('Incorrect number of arguments')
+    }
+
+    throw new Error(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
   }
 }

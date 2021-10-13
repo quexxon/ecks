@@ -1,9 +1,16 @@
 import { TypedValue } from '../ast'
+import { MethodType } from '../types'
 import XInteger from './integer'
 
 export default class XArray {
   kind = 'array'
   #value: TypedValue[]
+  methods: Record<string, MethodType> = {
+    len: {
+      arguments: [],
+      call: () => new XInteger(this.#value.length)
+    }
+  }
 
   constructor (value: TypedValue[]) {
     if (value.length > 1) {
@@ -17,14 +24,14 @@ export default class XArray {
 
   get __value (): TypedValue[] { return this.#value }
 
-  get len (): number {
+  get __length (): number {
     return this.#value.length
   }
 
   add (value: TypedValue): XArray {
     if (!(value instanceof XArray)) throw new TypeError()
-    if (value.len === 0) return this
-    if (this.len === 0) return value
+    if (value.__length === 0) return this
+    if (this.__length === 0) return value
     if (value.__value[0].kind !== this.#value[0].kind) throw new TypeError()
     return new XArray(this.#value.concat(value.__value))
   }

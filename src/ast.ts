@@ -115,6 +115,20 @@ export interface SetGroup {
   offset: number
 }
 
+export interface MethodCall {
+  kind: 'method-call'
+  receiver: Expression
+  identifier: Identifier
+  arguments: Expression[]
+  offset: number
+}
+
+export interface Identifier {
+  kind: 'identifier'
+  name: string
+  offset: number
+}
+
 export type Expression
   = Unary
   | Binary
@@ -122,6 +136,7 @@ export type Expression
   | Grouping
   | ArrayGroup
   | SetGroup
+  | MethodCall
 
 export function unary (token: Token, operand: Expression): Unary {
   return {
@@ -194,4 +209,23 @@ export function array (elements: Expression[], offset: number): ArrayGroup {
 
 export function set (elements: Expression[], offset: number): SetGroup {
   return { kind: 'set', elements, offset }
+}
+
+export function identifier (token: Token): Identifier {
+  return { kind: 'identifier', name: token.lexeme, offset: token.offset }
+}
+
+export function methodCall (
+  receiver: Expression,
+  token: Token,
+  args: Expression[],
+  offset: number
+): MethodCall {
+  return {
+    kind: 'method-call',
+    receiver,
+    identifier: identifier(token),
+    arguments: args,
+    offset
+  }
 }

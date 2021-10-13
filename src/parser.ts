@@ -10,7 +10,8 @@ import {
   string,
   templateString,
   set,
-  array
+  array,
+  methodCall
 } from './ast'
 
 export default class Parser {
@@ -72,13 +73,44 @@ export default class Parser {
   }
 
   #factor (): Expression {
-    let expression: Expression = this.#unary()
+    let expression: Expression = this.#method()
 
     while (this.#match(TokenKind.Slash, TokenKind.Star)) {
-      expression = binary(expression, this.#previous(), this.#unary())
+      expression = binary(expression, this.#previous(), this.#method())
     }
 
     return expression
+  }
+
+  #method (): Expression {
+    let expression: Expression = this.#unary()
+
+    while (this.#match(TokenKind.Dot)) {
+      expression = this.#methodCall(expression)
+    }
+
+    return expression
+  }
+
+  #methodCall (expression: Expression): Expression {
+    const offset = this.#previous().offset
+    if (this.#match(TokenKind.Identifier)) {
+      const identifier = this.#previous()
+      const args = []
+      if (this.#match(TokenKind.LeftParen)) {
+        while (!this.#check(TokenKind.RightParen)) {
+          args.push(this.#expression())
+          this.#match(TokenKind.Comma) // Skip optional comma
+          if (this.#isAtEnd()) {
+            throw new Error('Expected closing `)`')
+          }
+        }
+        this.#consume(TokenKind.RightParen, '')
+      }
+      return methodCall(expression, identifier, args, offset)
+    }
+
+    throw new Error('Expected an identifier')
   }
 
   #unary (): Expression {
@@ -111,6 +143,7 @@ export default class Parser {
       const elements = []
       while (!this.#match(TokenKind.RightBracket)) {
         elements.push(this.#expression())
+        this.#match(TokenKind.Comma) // Skip commas
         if (this.#isAtEnd()) {
           throw new Error('Expected closing `]` after expression')
         }
@@ -123,6 +156,7 @@ export default class Parser {
       const elements = []
       while (!this.#match(TokenKind.RightBracket)) {
         elements.push(this.#expression())
+        this.#match(TokenKind.Comma) // Skip commas
         if (this.#isAtEnd()) {
           throw new Error('Expected closing `]` after expression')
         }

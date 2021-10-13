@@ -1,9 +1,17 @@
 import { TypedValue } from '../ast'
+import { MethodType } from '../types'
+import XInteger from './integer'
 
 export default class XSet {
   kind = 'set'
   // TODO: Replace with a legit hash set
   #value: Map<string, TypedValue>
+  methods: Record<string, MethodType> = {
+    len: {
+      arguments: [],
+      call: () => new XInteger(this.#value.size)
+    }
+  }
 
   constructor (value: TypedValue[]) {
     if (value.length > 1) {
