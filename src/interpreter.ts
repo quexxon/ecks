@@ -2,6 +2,7 @@ import {
   ArrayGroup,
   Binary,
   BinaryOperator,
+  Cond,
   Expression,
   Grouping,
   Identifier,
@@ -17,6 +18,7 @@ import {
 import XArray from './std/array'
 import XBoolean from './std/boolean'
 import XLambda from './std/lambda'
+import XOptional from './std/optional'
 import XSet from './std/set'
 import { Environment } from './types'
 
@@ -29,7 +31,11 @@ export default class Interpreter {
   }
 
   eval (): TypedValue {
-    return this.#evaluate(this.#expression)
+    const result = this.#evaluate(this.#expression)
+    if (result instanceof XOptional) {
+      throw new Error('Unhandled optional value')
+    }
+    return result
   }
 
   #evaluate (expression: Expression): TypedValue {
@@ -39,6 +45,7 @@ export default class Interpreter {
       case 'unary': return this.#unary(expression)
       case 'binary': return this.#binary(expression)
       case 'ternary': return this.#ternary(expression)
+      case 'cond': return this.#cond(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
       case 'method-call': return this.#methodCall(expression)
@@ -128,6 +135,23 @@ export default class Interpreter {
     } else {
       return this.#evaluate(ternary.alternative)
     }
+  }
+
+  #cond (cond: Cond): TypedValue {
+    for (const [antecedent, consequent] of cond.branches) {
+      const condition = this.#evaluate(antecedent)
+      if (!(condition instanceof XBoolean)) {
+        throw new TypeError()
+      }
+
+      if (condition.value) {
+        return this.#evaluate(consequent)
+      }
+    }
+
+    if (cond.else === undefined) return new XOptional(this.#environment)
+
+    return this.#evaluate(cond.else)
   }
 
   #array (array: ArrayGroup): TypedValue {

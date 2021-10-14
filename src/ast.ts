@@ -3,6 +3,7 @@ import XBoolean from './std/boolean'
 import XFloat from './std/float'
 import XInteger from './std/integer'
 import XLambda from './std/lambda'
+import XOptional from './std/optional'
 import XSet from './std/set'
 import XString from './std/string'
 import XTemplateString from './std/templateString'
@@ -78,6 +79,7 @@ export type TypedValue
   | XArray
   | XSet
   | XLambda
+  | XOptional
 
 export interface Primitive {
   kind: 'primitive'
@@ -105,6 +107,12 @@ export interface Ternary {
   antecedent: Expression
   consequent: Expression
   alternative: Expression
+}
+
+export interface Cond {
+  kind: 'cond'
+  branches: Array<[Expression, Expression]>
+  else?: Expression
 }
 
 export interface Grouping {
@@ -150,6 +158,7 @@ export type Expression
   = Unary
   | Binary
   | Ternary
+  | Cond
   | Primitive
   | Grouping
   | ArrayGroup
@@ -185,6 +194,13 @@ export function ternary (
   alternative: Expression
 ): Ternary {
   return { kind: 'ternary', antecedent, consequent, alternative }
+}
+
+export function cond (
+  branches: Array<[Expression, Expression]>,
+  alternative?: Expression
+): Cond {
+  return { kind: 'cond', branches, else: alternative }
 }
 
 export function boolean (token: Token, environment: Environment): Primitive {

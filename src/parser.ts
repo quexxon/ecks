@@ -14,7 +14,8 @@ import {
   methodCall,
   lambda,
   identifier,
-  ternary
+  ternary,
+  cond
 } from './ast'
 import { Environment } from './types'
 
@@ -37,16 +38,36 @@ export default class Parser {
   }
 
   #conditional (): Expression {
-    let expression: Expression = this.#equality()
+    if (this.#match(TokenKind.Cond)) {
+      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `cond`')
+      const branches: Array<[Expression, Expression]> = []
+      let alternative
+      while (!this.#match(TokenKind.RightBrace)) {
+        if (this.#match(TokenKind.Else)) {
+          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
+          alternative = this.#conditional()
+          this.#consume(TokenKind.RightBrace, 'Expected closing `}` in `cond` expression')
+          break
+        }
+        const antecedent = this.#conditional()
+        this.#consume(TokenKind.Colon, 'Expected `:` between antecedent and consequent')
+        const consequent = this.#conditional()
+        branches.push([antecedent, consequent])
+        this.#match(TokenKind.Comma) // skip optional comma
+        if (this.#isAtEnd()) {
+          throw new SyntaxError('Expected closing `}` in `cond` expression')
+        }
+      }
+      return cond(branches, alternative)
+    }
+
+    const expression: Expression = this.#equality()
 
     if (this.#match(TokenKind.Question)) {
       const consequent = this.#conditional()
-      if (this.#match(TokenKind.Colon)) {
-        const alternative = this.#conditional()
-        expression = ternary(expression, consequent, alternative)
-      } else {
-        throw new SyntaxError()
-      }
+      this.#consume(TokenKind.Colon, 'Expected `:` between consequent and alternative')
+      const alternative = this.#conditional()
+      return ternary(expression, consequent, alternative)
     }
 
     return expression
