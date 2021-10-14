@@ -100,6 +100,13 @@ export interface Binary {
   offset: number
 }
 
+export interface Ternary {
+  kind: 'ternary'
+  antecedent: Expression
+  consequent: Expression
+  alternative: Expression
+}
+
 export interface Grouping {
   kind: 'grouping'
   expression: Expression
@@ -142,6 +149,7 @@ export interface Lambda {
 export type Expression
   = Unary
   | Binary
+  | Ternary
   | Primitive
   | Grouping
   | ArrayGroup
@@ -169,6 +177,14 @@ export function binary (
     right,
     offset: token.offset
   }
+}
+
+export function ternary (
+  antecedent: Expression,
+  consequent: Expression,
+  alternative: Expression
+): Ternary {
+  return { kind: 'ternary', antecedent, consequent, alternative }
 }
 
 export function boolean (token: Token, environment: Environment): Primitive {

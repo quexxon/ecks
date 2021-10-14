@@ -13,7 +13,8 @@ import {
   array,
   methodCall,
   lambda,
-  identifier
+  identifier,
+  ternary
 } from './ast'
 import { Environment } from './types'
 
@@ -32,7 +33,23 @@ export default class Parser {
   }
 
   #expression (): Expression {
-    return this.#equality()
+    return this.#conditional()
+  }
+
+  #conditional (): Expression {
+    let expression: Expression = this.#equality()
+
+    if (this.#match(TokenKind.Question)) {
+      const consequent = this.#conditional()
+      if (this.#match(TokenKind.Colon)) {
+        const alternative = this.#conditional()
+        expression = ternary(expression, consequent, alternative)
+      } else {
+        throw new SyntaxError()
+      }
+    }
+
+    return expression
   }
 
   #equality (): Expression {
