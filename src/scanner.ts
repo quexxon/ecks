@@ -68,7 +68,7 @@ export default class Scanner {
         this.#addToken(this.#isMatch('=') ? TokenKind.LessEqual : TokenKind.Less)
         break
       case '?':
-        this.#addToken(this.#isMatch('?') ? TokenKind.Question : TokenKind.DoubleQuestion)
+        this.#addToken(this.#isMatch('?') ? TokenKind.DoubleQuestion : TokenKind.Question)
         break
 
       // Omit whitespace
