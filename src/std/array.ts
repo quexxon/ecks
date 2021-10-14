@@ -1,18 +1,57 @@
 import { TypedValue } from '../ast'
-import { MethodType } from '../types'
+import { Environment, MethodType } from '../types'
+import XBoolean from './boolean'
 import XInteger from './integer'
+import XLambda from './lambda'
 
 export default class XArray {
   kind = 'array'
   #value: TypedValue[]
+  #environment: Environment
   methods: Record<string, MethodType> = {
     len: {
       arguments: [],
-      call: () => new XInteger(this.#value.length)
+      call: () => new XInteger(this.#value.length, this.#environment)
+    },
+    map: {
+      arguments: [
+        { kind: 'lambda' }
+      ],
+      call: (lambda: XLambda) => {
+        return this.__new(this.#value.map(v => lambda.call(v)))
+      }
+    },
+    keep: {
+      arguments: [
+        { kind: 'lambda' }
+      ],
+      call: (lambda: XLambda) => {
+        return this.__new(this.#value.filter(v => {
+          const resp = lambda.call(v)
+          if (!(resp instanceof XBoolean)) {
+            throw new Error('Lambda must return a boolean')
+          }
+          return resp.value
+        }))
+      }
+    },
+    drop: {
+      arguments: [
+        { kind: 'lambda' }
+      ],
+      call: (lambda: XLambda) => {
+        return this.__new(this.#value.filter(v => {
+          const resp = lambda.call(v)
+          if (!(resp instanceof XBoolean)) {
+            throw new Error('Lambda must return a boolean')
+          }
+          return !resp.value
+        }))
+      }
     }
   }
 
-  constructor (value: TypedValue[]) {
+  constructor (value: TypedValue[], environment: Environment) {
     if (value.length > 1) {
       const first = value[0]
       if (!value.every(x => x.kind === first.kind)) {
@@ -20,6 +59,7 @@ export default class XArray {
       }
     }
     this.#value = value
+    this.#environment = environment
   }
 
   get __value (): TypedValue[] { return this.#value }
@@ -33,7 +73,7 @@ export default class XArray {
     if (value.__length === 0) return this
     if (this.__length === 0) return value
     if (value.__value[0].kind !== this.#value[0].kind) throw new TypeError()
-    return new XArray(this.#value.concat(value.__value))
+    return this.__new(this.#value.concat(value.__value))
   }
 
   mult (value: TypedValue): XArray {
@@ -41,7 +81,11 @@ export default class XArray {
     if (value.value < 0) throw new Error('Cannot multiply array by a negative integer')
     const array = []
     for (let n = 0; n < value.value; n++) array.push(...this.#value)
-    return new XArray(array)
+    return this.__new(array)
+  }
+
+  __new (value: TypedValue[]): XArray {
+    return new XArray(value, this.#environment)
   }
 
   __toString (): string {

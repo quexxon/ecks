@@ -4,6 +4,8 @@ import {
   BinaryOperator,
   Expression,
   Grouping,
+  Identifier,
+  Lambda,
   MethodCall,
   Primitive,
   SetGroup,
@@ -12,12 +14,16 @@ import {
   UnaryOperator
 } from './ast'
 import XArray from './std/array'
+import XLambda from './std/lambda'
 import XSet from './std/set'
+import { Environment } from './types'
 
 export default class Interpreter {
   #expression: Expression
-  constructor (expression: Expression) {
+  #environment: Environment
+  constructor (expression: Expression, environment: Environment = new Map()) {
     this.#expression = expression
+    this.#environment = environment
   }
 
   eval (): TypedValue {
@@ -33,6 +39,8 @@ export default class Interpreter {
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
       case 'method-call': return this.#methodCall(expression)
+      case 'lambda': return this.#lambda(expression)
+      case 'identifier': return this.#identifier(expression)
     }
   }
 
@@ -106,11 +114,11 @@ export default class Interpreter {
   }
 
   #array (array: ArrayGroup): TypedValue {
-    return new XArray(array.elements.map(e => this.#evaluate(e)))
+    return new XArray(array.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
   #set (set: SetGroup): TypedValue {
-    return new XSet(set.elements.map(e => this.#evaluate(e)))
+    return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
   #methodCall (methodCall: MethodCall): TypedValue {
@@ -118,12 +126,26 @@ export default class Interpreter {
 
     if (methodCall.identifier.name in receiver.methods) {
       const method = receiver.methods[methodCall.identifier.name]
-      if (methodCall.arguments.length === method.arguments.length) {
-        return method.call.apply(null, methodCall.arguments.map(exp => this.#evaluate(exp)))
-      }
-      throw new Error('Incorrect number of arguments')
+      return method.call.apply(null, methodCall.arguments.map(exp => this.#evaluate(exp)))
     }
 
     throw new Error(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
+  }
+
+  #lambda (lambda: Lambda): TypedValue {
+    return new XLambda({
+      params: lambda.parameters,
+      body: lambda.body
+    }, this.#environment)
+  }
+
+  #identifier (identifier: Identifier): TypedValue {
+    const value = this.#environment.get(identifier.name)
+
+    if (value === undefined) {
+      throw new Error(`Unrecognized identifier: ${identifier.name}`)
+    }
+
+    return value
   }
 }

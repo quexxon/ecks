@@ -2,10 +2,12 @@ import XArray from './std/array'
 import XBoolean from './std/boolean'
 import XFloat from './std/float'
 import XInteger from './std/integer'
+import XLambda from './std/lambda'
 import XSet from './std/set'
 import XString from './std/string'
 import XTemplateString from './std/templateString'
 import Token, { TokenKind } from './token'
+import { Environment } from './types'
 
 export enum UnaryOperator {
   Negation = '-',
@@ -75,6 +77,7 @@ export type TypedValue
   | XTemplateString
   | XArray
   | XSet
+  | XLambda
 
 export interface Primitive {
   kind: 'primitive'
@@ -129,6 +132,13 @@ export interface Identifier {
   offset: number
 }
 
+export interface Lambda {
+  kind: 'lambda'
+  parameters: Identifier[]
+  body: Expression
+  offset: number
+}
+
 export type Expression
   = Unary
   | Binary
@@ -137,6 +147,8 @@ export type Expression
   | ArrayGroup
   | SetGroup
   | MethodCall
+  | Lambda
+  | Identifier
 
 export function unary (token: Token, operand: Expression): Unary {
   return {
@@ -159,42 +171,42 @@ export function binary (
   }
 }
 
-export function boolean (token: Token): Primitive {
+export function boolean (token: Token, environment: Environment): Primitive {
   return {
     kind: 'primitive',
-    value: new XBoolean(token.literal as boolean),
+    value: new XBoolean(token.literal as boolean, environment),
     offset: token.offset
   }
 }
 
-export function integer (token: Token): Primitive {
+export function integer (token: Token, environment: Environment): Primitive {
   return {
     kind: 'primitive',
-    value: new XInteger(token.literal as number),
+    value: new XInteger(token.literal as number, environment),
     offset: token.offset
   }
 }
 
-export function float (token: Token): Primitive {
+export function float (token: Token, environment: Environment): Primitive {
   return {
     kind: 'primitive',
-    value: new XFloat(token.literal as number),
+    value: new XFloat(token.literal as number, environment),
     offset: token.offset
   }
 }
 
-export function string (token: Token): Primitive {
+export function string (token: Token, environment: Environment): Primitive {
   return {
     kind: 'primitive',
-    value: new XString(token.literal as string),
+    value: new XString(token.literal as string, environment),
     offset: token.offset
   }
 }
 
-export function templateString (token: Token): Primitive {
+export function templateString (token: Token, environment: Environment): Primitive {
   return {
     kind: 'primitive',
-    value: new XTemplateString(token.literal as string),
+    value: new XTemplateString(token.literal as string, environment),
     offset: token.offset
   }
 }
@@ -228,4 +240,12 @@ export function methodCall (
     arguments: args,
     offset
   }
+}
+
+export function lambda (
+  parameters: Identifier[],
+  body: Expression,
+  offset: number
+): Lambda {
+  return { kind: 'lambda', parameters, body, offset }
 }

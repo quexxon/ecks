@@ -1,12 +1,14 @@
-import { MethodType } from '../types'
+import { Environment, MethodType } from '../types'
 
 export default class XTemplateString {
   kind = 'template_string'
   #value: string
+  #environment: Environment
   methods: Record<string, MethodType> = {}
 
-  constructor (value: string) {
+  constructor (value: string, environment: Environment) {
     this.#value = value
+    this.#environment = environment
   }
 
   get value (): string { return this.#value }

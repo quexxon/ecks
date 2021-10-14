@@ -11,15 +11,20 @@ import {
   templateString,
   set,
   array,
-  methodCall
+  methodCall,
+  lambda,
+  identifier
 } from './ast'
+import { Environment } from './types'
 
 export default class Parser {
   #tokens: Token[]
+  #environment: Environment
   #current: number = 0
 
-  constructor (tokens: Token[]) {
+  constructor (tokens: Token[], environment: Environment = new Map()) {
     this.#tokens = tokens
+    this.#environment = environment
   }
 
   parse (): Expression {
@@ -122,14 +127,16 @@ export default class Parser {
   }
 
   #primary (): Expression {
-    if (this.#match(TokenKind.False)) return boolean(this.#previous())
-    if (this.#match(TokenKind.True)) return boolean(this.#previous())
+    if (this.#match(TokenKind.False)) return boolean(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.True)) return boolean(this.#previous(), this.#environment)
 
-    if (this.#match(TokenKind.Integer)) return integer(this.#previous())
-    if (this.#match(TokenKind.Float)) return float(this.#previous())
+    if (this.#match(TokenKind.Integer)) return integer(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.Float)) return float(this.#previous(), this.#environment)
 
-    if (this.#match(TokenKind.String)) return string(this.#previous())
-    if (this.#match(TokenKind.TemplateString)) return templateString(this.#previous())
+    if (this.#match(TokenKind.String)) return string(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.TemplateString)) return templateString(this.#previous(), this.#environment)
+
+    if (this.#match(TokenKind.Identifier)) return identifier(this.#previous())
 
     if (this.#match(TokenKind.LeftParen)) {
       const offset = this.#previous().offset
@@ -162,6 +169,21 @@ export default class Parser {
         }
       }
       return set(elements, offset)
+    }
+
+    if (this.#match(TokenKind.Bar)) {
+      const offset = this.#previous().offset
+      const parameters = []
+      while (!this.#match(TokenKind.Bar)) {
+        parameters.push(
+          identifier(this.#consume(TokenKind.Identifier, 'Expected identifier'))
+        )
+      }
+      if (this.#isAtEnd()) {
+        throw new Error('Expected expression after lambda params')
+      }
+      const body = this.#expression()
+      return lambda(parameters, body, offset)
     }
 
     throw new Error('WHOOPS!')

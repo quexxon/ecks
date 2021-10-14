@@ -1,19 +1,20 @@
 import { TypedValue } from '../ast'
-import { MethodType } from '../types'
+import { Environment, MethodType } from '../types'
 import XInteger from './integer'
 
 export default class XSet {
   kind = 'set'
   // TODO: Replace with a legit hash set
   #value: Map<string, TypedValue>
+  #environment: Environment
   methods: Record<string, MethodType> = {
     len: {
       arguments: [],
-      call: () => new XInteger(this.#value.size)
+      call: () => new XInteger(this.#value.size, this.#environment)
     }
   }
 
-  constructor (value: TypedValue[]) {
+  constructor (value: TypedValue[], environment: Environment) {
     if (value.length > 1) {
       const first = value[0]
       if (!value.every(x => x.kind === first.kind)) {
@@ -21,6 +22,7 @@ export default class XSet {
       }
     }
     this.#value = new Map(value.map(v => [v.__toString(), v]))
+    this.#environment = environment
   }
 
   get __value (): Map<string, TypedValue> { return this.#value }
@@ -42,9 +44,13 @@ export default class XSet {
     ) {
       throw new TypeError()
     }
-    return new XSet(
+    return this.__new(
       Array.from(this.#value.values()).concat(Array.from(value.__value.values()))
     )
+  }
+
+  __new (value: TypedValue[]): XSet {
+    return new XSet(value, this.#environment)
   }
 
   __toString (): string {
