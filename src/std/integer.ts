@@ -2,6 +2,7 @@ import { TypedValue } from '../ast'
 import { Environment, MethodType } from '../types'
 import XBoolean from './boolean'
 import XFloat from './float'
+import XString from './string'
 
 function isNumber (value: unknown): value is XInteger | XFloat {
   return value instanceof XInteger || value instanceof XFloat
@@ -15,6 +16,10 @@ export default class XInteger {
     float: {
       arguments: [],
       call: () => new XFloat(this.#value, this.#environment)
+    },
+    str: {
+      arguments: [],
+      call: () => new XString(this.__toString(), this.#environment)
     }
   }
 
