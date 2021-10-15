@@ -86,7 +86,7 @@ export default class Parser {
   #boolean (): Expression {
     let expression: Expression = this.#comparison()
 
-    while (this.#match(TokenKind.Bar, TokenKind.Ampersand)) {
+    while (this.#match(TokenKind.And, TokenKind.Or)) {
       expression = binary(expression, this.#previous(), this.#comparison())
     }
 

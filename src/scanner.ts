@@ -185,6 +185,8 @@ export default class Scanner {
         .toLowerCase()
 
     switch (identifier) {
+      case 'and': this.#addToken(TokenKind.And); break
+      case 'or': this.#addToken(TokenKind.Or); break
       case 'case': this.#addToken(TokenKind.Case); break
       case 'cond': this.#addToken(TokenKind.Cond); break
       case 'else': this.#addToken(TokenKind.Else); break

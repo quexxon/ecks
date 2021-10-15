@@ -41,6 +41,8 @@ export enum TokenKind {
   Identifier,
 
   // Keywords
+  And,
+  Or,
   Case,
   Cond,
   Else,

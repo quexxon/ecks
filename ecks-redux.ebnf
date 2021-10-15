@@ -2,7 +2,7 @@ expression = equality ;
 
 equality = bool_op ( ( "=" | "!=" ) bool_op )* ;
 
-bool_op = comparison ( ( "|" | "&" ) comparison )* ;
+bool_op = comparison ( ( "and" | "or" ) comparison )* ;
 
 comparison = term ( ( "<" | "<=" | ">" | ">=" ) term )* ;
 

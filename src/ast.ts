@@ -46,8 +46,8 @@ const TOKEN_TO_BINARY_OP = new Map([
   [TokenKind.LessEqual, BinaryOperator.LessThanOrEqual],
   [TokenKind.Greater, BinaryOperator.GreaterThan],
   [TokenKind.GreaterEqual, BinaryOperator.GreaterThanOrEqual],
-  [TokenKind.Bar, BinaryOperator.Or],
-  [TokenKind.Ampersand, BinaryOperator.And]
+  [TokenKind.Or, BinaryOperator.Or],
+  [TokenKind.And, BinaryOperator.And]
 ])
 
 export function tokenToUnaryOperator (token: Token): UnaryOperator {
