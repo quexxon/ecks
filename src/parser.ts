@@ -203,21 +203,39 @@ export default class Parser {
   }
 
   #primary (): Expression {
-    if (this.#match(TokenKind.False)) return boolean(this.#previous(), this.#environment)
-    if (this.#match(TokenKind.True)) return boolean(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.False)) {
+      return boolean(this.#previous(), this.#environment)
+    }
+    if (this.#match(TokenKind.True)) {
+      return boolean(this.#previous(), this.#environment)
+    }
 
-    if (this.#match(TokenKind.Integer)) return integer(this.#previous(), this.#environment)
-    if (this.#match(TokenKind.Float)) return float(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.Integer)) {
+      return integer(this.#previous(), this.#environment)
+    }
+    if (this.#match(TokenKind.Float)) {
+      return float(this.#previous(), this.#environment)
+    }
 
-    if (this.#match(TokenKind.String)) return string(this.#previous(), this.#environment)
-    if (this.#match(TokenKind.TemplateString)) return templateString(this.#previous(), this.#environment)
+    if (this.#match(TokenKind.String)) {
+      return string(this.#previous(), this.#environment)
+    }
+    if (this.#match(TokenKind.TemplateString)) {
+      return templateString(this.#previous(), this.#environment)
+    }
 
-    if (this.#match(TokenKind.Identifier)) return identifier(this.#previous())
+    if (this.#match(TokenKind.Identifier)) {
+      return identifier(this.#previous())
+    }
 
     if (this.#match(TokenKind.LeftParen)) {
       const offset = this.#previous().offset
       const expression = this.#expression()
-      this.#consume(TokenKind.RightParen, 'Expected `)` after expression')
+      this.#consume(
+        TokenKind.RightParen,
+        'Expected `)` after expression',
+        UnmatchedOpeningChar
+      )
       return grouping(expression, offset)
     }
 

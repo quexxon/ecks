@@ -28,7 +28,7 @@ rl.on('line', (line) => {
   input += line
 
   if (line[line.length - 1] === ' ') {
-    rl.setPrompt('| ')
+    rl.setPrompt('  ')
     rl.prompt()
     return
   }
@@ -60,7 +60,7 @@ rl.on('line', (line) => {
     }
   } catch (err) {
     if (!(err instanceof SyntaxError || err instanceof TypeError) && line.length > 0) {
-      rl.setPrompt('| ')
+      rl.setPrompt('  ')
       rl.prompt()
       return
     } else if (err instanceof Error) {
