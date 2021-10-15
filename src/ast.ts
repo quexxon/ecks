@@ -115,6 +115,13 @@ export interface Cond {
   else?: Expression
 }
 
+export interface Case {
+  kind: 'case'
+  target: Expression
+  branches: Array<[Expression, Expression]>
+  else?: Expression
+}
+
 export interface Grouping {
   kind: 'grouping'
   expression: Expression
@@ -159,6 +166,7 @@ export type Expression
   | Binary
   | Ternary
   | Cond
+  | Case
   | Primitive
   | Grouping
   | ArrayGroup
@@ -201,6 +209,14 @@ export function cond (
   alternative?: Expression
 ): Cond {
   return { kind: 'cond', branches, else: alternative }
+}
+
+export function case_ (
+  target: Expression,
+  branches: Array<[Expression, Expression]>,
+  alternative?: Expression
+): Case {
+  return { kind: 'case', target, branches, else: alternative }
 }
 
 export function boolean (token: Token, environment: Environment): Primitive {

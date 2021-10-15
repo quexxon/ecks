@@ -11,7 +11,7 @@ export default class XTemplateString {
     this.#environment = environment
   }
 
-  get value (): string { return this.#value }
+  get __value (): string { return this.#value }
 
   __toString (): string {
     return this.#value.toString()

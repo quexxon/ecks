@@ -19,42 +19,42 @@ export default class XString {
     this.#environment = environment
   }
 
-  get value (): string { return this.#value }
-
   add (value: TypedValue): XString {
     if (!(value instanceof XString)) throw new TypeError()
-    return this.__new(this.#value + value.value)
+    return this.__new(this.#value + value.__value)
   }
 
   eq (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value === value.value, this.#environment)
+    return new XBoolean(this.#value === value.__value, this.#environment)
   }
 
   neq (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value !== value.value, this.#environment)
+    return new XBoolean(this.#value !== value.__value, this.#environment)
   }
 
   lt (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value < value.value, this.#environment)
+    return new XBoolean(this.#value < value.__value, this.#environment)
   }
 
   lte (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value <= value.value, this.#environment)
+    return new XBoolean(this.#value <= value.__value, this.#environment)
   }
 
   gt (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value > value.value, this.#environment)
+    return new XBoolean(this.#value > value.__value, this.#environment)
   }
 
   gte (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value >= value.value, this.#environment)
+    return new XBoolean(this.#value >= value.__value, this.#environment)
   }
+
+  get __value (): string { return this.#value }
 
   __new (value: string): XString {
     return new XString(value, this.#environment)

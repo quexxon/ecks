@@ -22,8 +22,8 @@ export default class XFloat {
         Type.float
       ],
       call: (x: XFloat, y: XFloat) => {
-        if (this.#value < x.value) return x
-        if (this.#value > y.value) return y
+        if (this.#value < x.__value) return x
+        if (this.#value > y.__value) return y
         return this
       }
     }
@@ -34,26 +34,24 @@ export default class XFloat {
     this.#environment = environment
   }
 
-  get value (): number { return this.#value }
-
   add (value: TypedValue): XFloat {
     if (!isNumber(value)) throw new TypeError()
-    return this.__new(this.#value + value.value)
+    return this.__new(this.#value + value.__value)
   }
 
   sub (value: TypedValue): XFloat {
     if (!isNumber(value)) throw new TypeError()
-    return this.__new(this.#value + value.value)
+    return this.__new(this.#value + value.__value)
   }
 
   mult (value: TypedValue): XFloat {
     if (!isNumber(value)) throw new TypeError()
-    return this.__new(this.#value * value.value)
+    return this.__new(this.#value * value.__value)
   }
 
   div (value: TypedValue): XFloat {
     if (!isNumber(value)) throw new TypeError()
-    return this.__new(this.#value / value.value)
+    return this.__new(this.#value / value.__value)
   }
 
   neg (): XFloat {
@@ -62,33 +60,35 @@ export default class XFloat {
 
   eq (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value === value.value, this.#environment)
+    return new XBoolean(this.#value === value.__value, this.#environment)
   }
 
   neq (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value !== value.value, this.#environment)
+    return new XBoolean(this.#value !== value.__value, this.#environment)
   }
 
   lt (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value < value.value, this.#environment)
+    return new XBoolean(this.#value < value.__value, this.#environment)
   }
 
   lte (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value <= value.value, this.#environment)
+    return new XBoolean(this.#value <= value.__value, this.#environment)
   }
 
   gt (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value > value.value, this.#environment)
+    return new XBoolean(this.#value > value.__value, this.#environment)
   }
 
   gte (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value >= value.value, this.#environment)
+    return new XBoolean(this.#value >= value.__value, this.#environment)
   }
+
+  get __value (): number { return this.#value }
 
   __new (value: number): XFloat {
     return new XFloat(value, this.#environment)
@@ -96,7 +96,7 @@ export default class XFloat {
 
   __toString (): string {
     if (Math.trunc(this.#value) === this.#value) {
-      return this.value.toString() + '.0'
+      return this.__value.toString() + '.0'
     }
 
     return this.#value.toString()

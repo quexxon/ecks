@@ -25,8 +25,6 @@ export default class XSet {
     this.#environment = environment
   }
 
-  get __value (): Map<string, TypedValue> { return this.#value }
-
   get len (): number {
     return this.#value.size
   }
@@ -48,6 +46,8 @@ export default class XSet {
       Array.from(this.#value.values()).concat(Array.from(value.__value.values()))
     )
   }
+
+  get __value (): Map<string, TypedValue> { return this.#value }
 
   __new (value: TypedValue[]): XSet {
     return new XSet(value, this.#environment)

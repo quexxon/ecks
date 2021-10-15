@@ -15,7 +15,8 @@ import {
   lambda,
   identifier,
   ternary,
-  cond
+  cond,
+  case_
 } from './ast'
 import { Environment } from './types'
 
@@ -59,6 +60,30 @@ export default class Parser {
         }
       }
       return cond(branches, alternative)
+    }
+
+    if (this.#match(TokenKind.Case)) {
+      const target = this.#expression()
+      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `case`')
+      const branches: Array<[Expression, Expression]> = []
+      let alternative
+      while (!this.#match(TokenKind.RightBrace)) {
+        if (this.#match(TokenKind.Else)) {
+          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
+          alternative = this.#conditional()
+          this.#consume(TokenKind.RightBrace, 'Expected closing `}` in `case` expression')
+          break
+        }
+        const antecedent = this.#conditional()
+        this.#consume(TokenKind.Colon, 'Expected `:` between case and expression')
+        const consequent = this.#conditional()
+        branches.push([antecedent, consequent])
+        this.#match(TokenKind.Comma) // skip optional comma
+        if (this.#isAtEnd()) {
+          throw new SyntaxError('Expected closing `}` in `case` expression')
+        }
+      }
+      return case_(target, branches, alternative)
     }
 
     const expression: Expression = this.#equality()

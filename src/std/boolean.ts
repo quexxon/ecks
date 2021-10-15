@@ -18,31 +18,31 @@ export default class XBoolean {
     this.#environment = environment
   }
 
-  get value (): boolean { return this.#value }
-
   not (): XBoolean {
     return this.__new(!this.#value)
   }
 
   eq (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
-    return this.__new(this.#value === value.value)
+    return this.__new(this.#value === value.__value)
   }
 
   neq (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
-    return this.__new(this.#value !== value.value)
+    return this.__new(this.#value !== value.__value)
   }
 
   or (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
-    return this.__new(this.#value || value.value)
+    return this.__new(this.#value || value.__value)
   }
 
   and (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
-    return this.__new(this.#value && value.value)
+    return this.__new(this.#value && value.__value)
   }
+
+  get __value (): boolean { return this.#value }
 
   __new (value: boolean): XBoolean {
     return new XBoolean(value, this.#environment)

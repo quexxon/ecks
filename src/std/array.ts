@@ -31,7 +31,7 @@ export default class XArray {
           if (!(resp instanceof XBoolean)) {
             throw new Error('Lambda must return a boolean')
           }
-          return resp.value
+          return resp.__value
         }))
       }
     },
@@ -45,7 +45,7 @@ export default class XArray {
           if (!(resp instanceof XBoolean)) {
             throw new Error('Lambda must return a boolean')
           }
-          return !resp.value
+          return !resp.__value
         }))
       }
     }
@@ -78,9 +78,9 @@ export default class XArray {
 
   mult (value: TypedValue): XArray {
     if (!(value instanceof XInteger)) throw new TypeError()
-    if (value.value < 0) throw new Error('Cannot multiply array by a negative integer')
+    if (value.__value < 0) throw new Error('Cannot multiply array by a negative integer')
     const array = []
-    for (let n = 0; n < value.value; n++) array.push(...this.#value)
+    for (let n = 0; n < value.__value; n++) array.push(...this.#value)
     return this.__new(array)
   }
 

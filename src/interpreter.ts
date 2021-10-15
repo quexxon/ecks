@@ -2,6 +2,7 @@ import {
   ArrayGroup,
   Binary,
   BinaryOperator,
+  Case,
   Cond,
   Expression,
   Grouping,
@@ -46,6 +47,7 @@ export default class Interpreter {
       case 'binary': return this.#binary(expression)
       case 'ternary': return this.#ternary(expression)
       case 'cond': return this.#cond(expression)
+      case 'case': return this.#case(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
       case 'method-call': return this.#methodCall(expression)
@@ -130,7 +132,7 @@ export default class Interpreter {
       throw new TypeError()
     }
 
-    if (condition.value) {
+    if (condition.__value) {
       return this.#evaluate(ternary.consequent)
     } else {
       return this.#evaluate(ternary.alternative)
@@ -144,7 +146,7 @@ export default class Interpreter {
         throw new TypeError()
       }
 
-      if (condition.value) {
+      if (condition.__value) {
         return this.#evaluate(consequent)
       }
     }
@@ -152,6 +154,33 @@ export default class Interpreter {
     if (cond.else === undefined) return new XOptional(this.#environment)
 
     return this.#evaluate(cond.else)
+  }
+
+  #case (case_: Case): TypedValue {
+    const target = this.#evaluate(case_.target)
+    if (target instanceof XLambda || target instanceof XOptional) {
+      throw new TypeError()
+    }
+
+    for (const [caseValue, expression] of case_.branches) {
+      const case_ = this.#evaluate(caseValue)
+
+      if (case_ instanceof XLambda || case_ instanceof XOptional) {
+        throw new TypeError()
+      }
+
+      if (case_.kind !== target.kind) {
+        throw new TypeError()
+      }
+
+      if (case_.__value === target.__value) {
+        return this.#evaluate(expression)
+      }
+    }
+
+    if (case_.else === undefined) return new XOptional(this.#environment)
+
+    return this.#evaluate(case_.else)
   }
 
   #array (array: ArrayGroup): TypedValue {

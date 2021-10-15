@@ -6,6 +6,8 @@ export default class XOptional {
   #environment: Environment
   methods: Record<string, MethodType> = {}
 
+  get value (): undefined { return this.#value }
+
   constructor (environment: Environment) {
     this.#environment = environment
   }
