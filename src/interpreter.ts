@@ -34,7 +34,7 @@ export default class Interpreter {
   eval (): TypedValue {
     const result = this.#evaluate(this.#expression)
     if (result instanceof XOptional) {
-      throw new Error('Unhandled optional value')
+      throw new TypeError('Unhandled optional value')
     }
     return result
   }
@@ -199,7 +199,7 @@ export default class Interpreter {
       return method.call.apply(null, methodCall.arguments.map(exp => this.#evaluate(exp)))
     }
 
-    throw new Error(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
+    throw new TypeError(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
   }
 
   #lambda (lambda: Lambda): TypedValue {

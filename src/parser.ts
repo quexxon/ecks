@@ -19,6 +19,7 @@ import {
   case_
 } from './ast'
 import { Environment } from './types'
+import { UnexpectedEof, UnmatchedOpeningChar } from './error'
 
 export default class Parser {
   #tokens: Token[]
@@ -35,63 +36,16 @@ export default class Parser {
   }
 
   #expression (): Expression {
-    return this.#conditional()
+    return this.#ternary()
   }
 
-  #conditional (): Expression {
-    if (this.#match(TokenKind.Cond)) {
-      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `cond`')
-      const branches: Array<[Expression, Expression]> = []
-      let alternative
-      while (!this.#match(TokenKind.RightBrace)) {
-        if (this.#match(TokenKind.Else)) {
-          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
-          alternative = this.#conditional()
-          this.#consume(TokenKind.RightBrace, 'Expected closing `}` in `cond` expression')
-          break
-        }
-        const antecedent = this.#conditional()
-        this.#consume(TokenKind.Colon, 'Expected `:` between antecedent and consequent')
-        const consequent = this.#conditional()
-        branches.push([antecedent, consequent])
-        this.#match(TokenKind.Comma) // skip optional comma
-        if (this.#isAtEnd()) {
-          throw new SyntaxError('Expected closing `}` in `cond` expression')
-        }
-      }
-      return cond(branches, alternative)
-    }
-
-    if (this.#match(TokenKind.Case)) {
-      const target = this.#expression()
-      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `case`')
-      const branches: Array<[Expression, Expression]> = []
-      let alternative
-      while (!this.#match(TokenKind.RightBrace)) {
-        if (this.#match(TokenKind.Else)) {
-          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
-          alternative = this.#conditional()
-          this.#consume(TokenKind.RightBrace, 'Expected closing `}` in `case` expression')
-          break
-        }
-        const antecedent = this.#conditional()
-        this.#consume(TokenKind.Colon, 'Expected `:` between case and expression')
-        const consequent = this.#conditional()
-        branches.push([antecedent, consequent])
-        this.#match(TokenKind.Comma) // skip optional comma
-        if (this.#isAtEnd()) {
-          throw new SyntaxError('Expected closing `}` in `case` expression')
-        }
-      }
-      return case_(target, branches, alternative)
-    }
-
+  #ternary (): Expression {
     const expression: Expression = this.#equality()
 
     if (this.#match(TokenKind.Question)) {
-      const consequent = this.#conditional()
+      const consequent = this.#ternary()
       this.#consume(TokenKind.Colon, 'Expected `:` between consequent and alternative')
-      const alternative = this.#conditional()
+      const alternative = this.#ternary()
       return ternary(expression, consequent, alternative)
     }
 
@@ -170,7 +124,7 @@ export default class Parser {
           args.push(this.#expression())
           this.#match(TokenKind.Comma) // Skip optional comma
           if (this.#isAtEnd()) {
-            throw new Error('Expected closing `)`')
+            throw new UnmatchedOpeningChar('Expected closing `)`')
           }
         }
         this.#consume(TokenKind.RightParen, '')
@@ -184,6 +138,65 @@ export default class Parser {
   #unary (): Expression {
     if (this.#match(TokenKind.Bang, TokenKind.Minus)) {
       return unary(this.#previous(), this.#unary())
+    }
+
+    return this.#conditional()
+  }
+
+  #conditional (): Expression {
+    if (this.#match(TokenKind.Cond)) {
+      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `cond`')
+      const branches: Array<[Expression, Expression]> = []
+      let alternative
+      while (!this.#match(TokenKind.RightBrace)) {
+        if (this.#match(TokenKind.Else)) {
+          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
+          alternative = this.#expression()
+          this.#consume(
+            TokenKind.RightBrace,
+            'Expected closing `}` in `cond` expression',
+            UnmatchedOpeningChar
+          )
+          break
+        }
+        const antecedent = this.#expression()
+        this.#consume(TokenKind.Colon, 'Expected `:` between antecedent and consequent')
+        const consequent = this.#expression()
+        branches.push([antecedent, consequent])
+        this.#match(TokenKind.Comma) // skip optional comma
+        if (this.#isAtEnd()) {
+          throw new UnmatchedOpeningChar('Expected closing `}` in `cond` expression')
+        }
+      }
+      return cond(branches, alternative)
+    }
+
+    if (this.#match(TokenKind.Case)) {
+      const target = this.#expression()
+      const branches: Array<[Expression, Expression]> = []
+      let alternative
+      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `case`')
+      while (!this.#match(TokenKind.RightBrace)) {
+        if (this.#match(TokenKind.Else)) {
+          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
+          alternative = this.#expression()
+          this.#consume(
+            TokenKind.RightBrace,
+            'Expected closing `}` in `case` expression',
+            UnmatchedOpeningChar
+          )
+          break
+        }
+        const antecedent = this.#expression()
+        this.#consume(TokenKind.Colon, 'Expected `:` between case and expression')
+        const consequent = this.#expression()
+        branches.push([antecedent, consequent])
+        this.#match(TokenKind.Comma) // skip optional comma
+        if (this.#isAtEnd()) {
+          throw new UnmatchedOpeningChar('Expected closing `}` in `case` expression')
+        }
+      }
+      return case_(target, branches, alternative)
     }
 
     return this.#primary()
@@ -215,7 +228,7 @@ export default class Parser {
         elements.push(this.#expression())
         this.#match(TokenKind.Comma) // Skip commas
         if (this.#isAtEnd()) {
-          throw new Error('Expected closing `]` after expression')
+          throw new UnmatchedOpeningChar('Expected closing `]` after expression')
         }
       }
       return array(elements, offset)
@@ -228,7 +241,7 @@ export default class Parser {
         elements.push(this.#expression())
         this.#match(TokenKind.Comma) // Skip commas
         if (this.#isAtEnd()) {
-          throw new Error('Expected closing `]` after expression')
+          throw new UnmatchedOpeningChar('Expected closing `]` after expression')
         }
       }
       return set(elements, offset)
@@ -243,7 +256,7 @@ export default class Parser {
         )
       }
       if (this.#isAtEnd()) {
-        throw new Error('Expected expression after lambda params')
+        throw new UnexpectedEof('Expected expression after lambda params')
       }
       const body = this.#expression()
       return lambda(parameters, body, offset)
@@ -285,8 +298,12 @@ export default class Parser {
     return this.#tokens[this.#current - 1]
   }
 
-  #consume (tokenKind: TokenKind, message: string): Token {
+  #consume (
+    tokenKind: TokenKind,
+    message: string,
+    Err: new (message?: string) => Error = SyntaxError
+  ): Token {
     if (this.#check(tokenKind)) return this.#advance()
-    throw new Error(message)
+    throw new Err(message)
   }
 }
