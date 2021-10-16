@@ -1,6 +1,8 @@
 import { TypedValue } from '../ast'
 import { Environment, MethodType } from '../types'
+import XBoolean from './boolean'
 import XInteger from './integer'
+import XLambda from './lambda'
 
 export default class XSet {
   kind = 'set'
@@ -11,6 +13,16 @@ export default class XSet {
     len: {
       arguments: [],
       call: () => new XInteger(this.#value.size, this.#environment)
+    },
+    has: {
+      arguments: [],
+      call: (value: TypedValue): XBoolean => {
+        if (value instanceof XLambda) {
+          throw new TypeError()
+        }
+
+        return new XBoolean(this.#value.has(value.__toString()), this.#environment)
+      }
     }
   }
 

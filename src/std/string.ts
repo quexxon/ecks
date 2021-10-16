@@ -61,6 +61,10 @@ export default class XString {
   }
 
   __toString (): string {
-    return this.#value.toString()
+    if (this.#value.includes("'")) {
+      return `"${this.#value}"`
+    } else {
+      return `'${this.#value}'`
+    }
   }
 }

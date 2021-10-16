@@ -10,27 +10,55 @@ import XFloat from './std/float'
 import XBoolean from './std/boolean'
 import { TypedValue } from './ast'
 import XOptional from './std/optional'
+import XArray from './std/array'
+import XSet from './std/set'
+import XMap from './std/map'
 
 function prettyPrint (value: TypedValue): string {
-  const val = value instanceof XOptional && value.__value !== undefined ? value.__value : value
-  let str: string = val.__toString()
-  if (val instanceof XString) {
-    if (val.__value.includes("'")) {
-      str = `"${Chalk.green(val.__value)}"`
+  if (value instanceof XString) {
+    if (value.__value.includes("'")) {
+      return `"${Chalk.green(value.__value)}"`
     } else {
-      str = `'${Chalk.green(val.__value)}'`
+      return `'${Chalk.green(value.__value)}'`
     }
-  } else if (val instanceof XInteger || val instanceof XFloat) {
-    str = Chalk.yellow(str)
-  } else if (val instanceof XBoolean) {
-    str = Chalk.magenta(str)
   }
 
-  if (value instanceof XOptional && value.__value !== undefined) {
-    str = `some(${str})`
+  if (value instanceof XInteger || value instanceof XFloat) {
+    return Chalk.yellow(value.__toString())
   }
 
-  return str
+  if (value instanceof XBoolean) {
+    return Chalk.magenta(value.__toString())
+  }
+
+  if (value instanceof XOptional) {
+    if (value.__value === undefined) {
+      return value.__toString()
+    } else {
+      return `some(${prettyPrint(value.__value)})`
+    }
+  }
+
+  if (value instanceof XArray) {
+    return `[${value.__value.map(prettyPrint).join(' ')}]`
+  }
+
+  if (value instanceof XSet) {
+    return `$[${Array.from(value.__value.values()).map(prettyPrint).join(' ')}]`
+  }
+
+  if (value instanceof XMap) {
+    const entries = Array.from(value.__value.entries()).map(([key, val]) => {
+      const scanner = new Scanner(key)
+      const parser = new Parser(scanner.scan())
+      const interpreter = new Interpreter(parser.parse())
+
+      return `${prettyPrint(interpreter.eval())}: ${prettyPrint(val)}`
+    })
+    return `{${entries.join(', ')}}`
+  }
+
+  return value.__toString()
 }
 
 const rl = ReadLine.createInterface({

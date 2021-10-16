@@ -3,6 +3,7 @@ import XBoolean from './std/boolean'
 import XFloat from './std/float'
 import XInteger from './std/integer'
 import XLambda from './std/lambda'
+import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
 import XString from './std/string'
@@ -80,6 +81,7 @@ export type TypedValue
   | XTemplateString
   | XArray
   | XSet
+  | XMap
   | XLambda
   | XOptional
 
@@ -148,11 +150,23 @@ export interface SetGroup {
   offset: number
 }
 
+export interface MapGroup {
+  kind: 'map'
+  elements: Array<[Expression, Expression]>
+  offset: number
+}
+
 export interface MethodCall {
   kind: 'method-call'
   receiver: Expression
   identifier: Identifier
   arguments: Expression[]
+  offset: number
+}
+
+export interface Optional {
+  kind: 'optional'
+  value?: Expression
   offset: number
 }
 
@@ -180,8 +194,10 @@ export type Expression
   | Grouping
   | ArrayGroup
   | SetGroup
+  | MapGroup
   | MethodCall
   | Lambda
+  | Optional
   | Identifier
 
 export function unary (token: Token, operand: Expression): Unary {
@@ -285,6 +301,14 @@ export function array (elements: Expression[], offset: number): ArrayGroup {
 
 export function set (elements: Expression[], offset: number): SetGroup {
   return { kind: 'set', elements, offset }
+}
+
+export function map (elements: Array<[Expression, Expression]>, offset: number): MapGroup {
+  return { kind: 'map', elements, offset }
+}
+
+export function optional (offset: number, value?: Expression): Optional {
+  return { kind: 'optional', value, offset }
 }
 
 export function identifier (token: Token): Identifier {

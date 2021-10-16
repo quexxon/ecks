@@ -49,6 +49,8 @@ export enum TokenKind {
   Let,
   True,
   False,
+  Some,
+  None,
 }
 
 export default class Token {

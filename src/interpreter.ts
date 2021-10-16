@@ -9,7 +9,9 @@ import {
   Identifier,
   Lambda,
   Let,
+  MapGroup,
   MethodCall,
+  Optional,
   Primitive,
   SetGroup,
   Ternary,
@@ -20,6 +22,7 @@ import {
 import XArray from './std/array'
 import XBoolean from './std/boolean'
 import XLambda from './std/lambda'
+import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
 import { Environment } from './types'
@@ -49,8 +52,10 @@ export default class Interpreter {
       case 'let': return this.#let(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
+      case 'map': return this.#map(expression)
       case 'method-call': return this.#methodCall(expression)
       case 'lambda': return this.#lambda(expression)
+      case 'optional': return this.#optional(expression)
       case 'identifier': return this.#identifier(expression)
     }
   }
@@ -211,6 +216,13 @@ export default class Interpreter {
     return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
+  #map (map: MapGroup): TypedValue {
+    return new XMap(
+      map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
+      this.#environment
+    )
+  }
+
   #methodCall (methodCall: MethodCall): TypedValue {
     const receiver = this.#evaluate(methodCall.receiver)
 
@@ -227,6 +239,11 @@ export default class Interpreter {
       params: lambda.parameters,
       body: lambda.body
     }, this.#environment)
+  }
+
+  #optional (optional: Optional): XOptional {
+    const value = optional.value === undefined ? undefined : this.#evaluate(optional.value)
+    return new XOptional(this.#environment, value)
   }
 
   #identifier (identifier: Identifier): TypedValue {

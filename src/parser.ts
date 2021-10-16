@@ -18,7 +18,9 @@ import {
   cond,
   case_,
   Identifier,
-  let_
+  let_,
+  map,
+  optional
 } from './ast'
 import { Environment } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
@@ -254,6 +256,13 @@ export default class Parser {
       return templateString(this.#previous(), this.#environment)
     }
 
+    if (this.#match(TokenKind.None)) {
+      return optional(this.#previous().offset)
+    }
+    if (this.#match(TokenKind.Some)) {
+      return optional(this.#previous().offset, this.#expression())
+    }
+
     if (this.#match(TokenKind.Identifier)) {
       return identifier(this.#previous())
     }
@@ -293,6 +302,22 @@ export default class Parser {
         }
       }
       return set(elements, offset)
+    }
+
+    if (this.#match(TokenKind.LeftBrace)) {
+      const offset = this.#previous().offset
+      const entries: Array<[Expression, Expression]> = []
+      while (!this.#match(TokenKind.RightBrace)) {
+        const key = this.#expression()
+        this.#match(TokenKind.Colon) // Skip optional colon
+        const value = this.#expression()
+        this.#match(TokenKind.Comma) // Skip optional colon
+        if (this.#isAtEnd()) {
+          throw new UnmatchedOpeningChar('Expected closing `}` in map literal')
+        }
+        entries.push([key, value])
+      }
+      return map(entries, offset)
     }
 
     if (this.#match(TokenKind.Bar)) {
