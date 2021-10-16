@@ -31,16 +31,16 @@ export default class Interpreter {
   #expression: Expression
   #environment: Environment
 
-  constructor (expression: Expression, environment: Environment = new Map()) {
+  constructor(expression: Expression, environment: Environment = new Map()) {
     this.#expression = expression
     this.#environment = environment
   }
 
-  eval (): TypedValue {
+  eval(): TypedValue {
     return this.#evaluate(this.#expression)
   }
 
-  #evaluate (expression: Expression): TypedValue {
+  #evaluate(expression: Expression): TypedValue {
     switch (expression.kind) {
       case 'primitive': return this.#primitive(expression)
       case 'grouping': return this.#grouping(expression)
@@ -60,15 +60,15 @@ export default class Interpreter {
     }
   }
 
-  #primitive (primitive: Primitive): TypedValue {
+  #primitive(primitive: Primitive): TypedValue {
     return primitive.value
   }
 
-  #grouping (grouping: Grouping): TypedValue {
+  #grouping(grouping: Grouping): TypedValue {
     return this.#evaluate(grouping.expression)
   }
 
-  #unary (unary: Unary): TypedValue {
+  #unary(unary: Unary): TypedValue {
     const operand = this.#evaluate(unary.operand)
 
     switch (unary.operator) {
@@ -83,7 +83,7 @@ export default class Interpreter {
     throw new TypeError()
   }
 
-  #binary (binary: Binary): TypedValue {
+  #binary(binary: Binary): TypedValue {
     const l = this.#evaluate(binary.left)
     const r = this.#evaluate(binary.right)
 
@@ -131,7 +131,7 @@ export default class Interpreter {
     throw new TypeError()
   }
 
-  #ternary (ternary: Ternary): TypedValue {
+  #ternary(ternary: Ternary): TypedValue {
     const condition = this.#evaluate(ternary.antecedent)
 
     if (!(condition instanceof XBoolean)) {
@@ -145,7 +145,7 @@ export default class Interpreter {
     }
   }
 
-  #cond (cond: Cond): TypedValue {
+  #cond(cond: Cond): TypedValue {
     let result: TypedValue | undefined
     for (const [antecedent, consequent] of cond.branches) {
       const condition = this.#evaluate(antecedent)
@@ -170,12 +170,13 @@ export default class Interpreter {
     return result
   }
 
-  #case (case_: Case): TypedValue {
+  #case(case_: Case): TypedValue {
     const target = this.#evaluate(case_.target)
     if (target instanceof XLambda || target instanceof XOptional) {
       throw new TypeError()
     }
 
+    let result: TypedValue | undefined
     for (const [caseValue, expression] of case_.branches) {
       const case_ = this.#evaluate(caseValue)
 
@@ -188,16 +189,22 @@ export default class Interpreter {
       }
 
       if (case_.__value === target.__value) {
-        return this.#evaluate(expression)
+        result = this.#evaluate(expression)
       }
     }
 
-    if (case_.else === undefined) return new XOptional(this.#environment)
+    if (case_.else === undefined) {
+      return new XOptional(this.#environment, result)
+    }
 
-    return this.#evaluate(case_.else)
+    if (result === undefined) {
+      result = this.#evaluate(case_.else)
+    }
+
+    return result
   }
 
-  #let (let_: Let): TypedValue {
+  #let(let_: Let): TypedValue {
     const environment = new Map(this.#environment)
     for (const [name, expression] of let_.bindings) {
       const interpreter = new Interpreter(expression, environment)
@@ -208,22 +215,22 @@ export default class Interpreter {
     return interpreter.eval()
   }
 
-  #array (array: ArrayGroup): TypedValue {
+  #array(array: ArrayGroup): TypedValue {
     return new XArray(array.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
-  #set (set: SetGroup): TypedValue {
+  #set(set: SetGroup): TypedValue {
     return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
-  #map (map: MapGroup): TypedValue {
+  #map(map: MapGroup): TypedValue {
     return new XMap(
       map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
       this.#environment
     )
   }
 
-  #methodCall (methodCall: MethodCall): TypedValue {
+  #methodCall(methodCall: MethodCall): TypedValue {
     const receiver = this.#evaluate(methodCall.receiver)
 
     if (methodCall.identifier.name in receiver.methods) {
@@ -234,19 +241,19 @@ export default class Interpreter {
     throw new TypeError(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
   }
 
-  #lambda (lambda: Lambda): TypedValue {
+  #lambda(lambda: Lambda): TypedValue {
     return new XLambda({
       params: lambda.parameters,
       body: lambda.body
     }, this.#environment)
   }
 
-  #optional (optional: Optional): XOptional {
+  #optional(optional: Optional): XOptional {
     const value = optional.value === undefined ? undefined : this.#evaluate(optional.value)
     return new XOptional(this.#environment, value)
   }
 
-  #identifier (identifier: Identifier): TypedValue {
+  #identifier(identifier: Identifier): TypedValue {
     const value = this.#environment.get(identifier.name)
 
     if (value === undefined) {
