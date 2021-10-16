@@ -8,6 +8,7 @@ import {
   Grouping,
   Identifier,
   Lambda,
+  Let,
   MethodCall,
   Primitive,
   SetGroup,
@@ -26,17 +27,14 @@ import { Environment } from './types'
 export default class Interpreter {
   #expression: Expression
   #environment: Environment
+
   constructor (expression: Expression, environment: Environment = new Map()) {
     this.#expression = expression
     this.#environment = environment
   }
 
   eval (): TypedValue {
-    const result = this.#evaluate(this.#expression)
-    if (result instanceof XOptional) {
-      throw new TypeError('Unhandled optional value')
-    }
-    return result
+    return this.#evaluate(this.#expression)
   }
 
   #evaluate (expression: Expression): TypedValue {
@@ -48,6 +46,7 @@ export default class Interpreter {
       case 'ternary': return this.#ternary(expression)
       case 'cond': return this.#cond(expression)
       case 'case': return this.#case(expression)
+      case 'let': return this.#let(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
       case 'method-call': return this.#methodCall(expression)
@@ -120,6 +119,8 @@ export default class Interpreter {
       case BinaryOperator.And:
         if ('and' in l) return l.and(r)
         break
+      case BinaryOperator.Optional:
+        if ('opt' in l) return l.opt(r)
     }
 
     throw new TypeError()
@@ -140,6 +141,7 @@ export default class Interpreter {
   }
 
   #cond (cond: Cond): TypedValue {
+    let result: TypedValue | undefined
     for (const [antecedent, consequent] of cond.branches) {
       const condition = this.#evaluate(antecedent)
       if (!(condition instanceof XBoolean)) {
@@ -147,13 +149,20 @@ export default class Interpreter {
       }
 
       if (condition.__value) {
-        return this.#evaluate(consequent)
+        result = this.#evaluate(consequent)
+        break
       }
     }
 
-    if (cond.else === undefined) return new XOptional(this.#environment)
+    if (cond.else === undefined) {
+      return new XOptional(this.#environment, result)
+    }
 
-    return this.#evaluate(cond.else)
+    if (result === undefined) {
+      result = this.#evaluate(cond.else)
+    }
+
+    return result
   }
 
   #case (case_: Case): TypedValue {
@@ -181,6 +190,17 @@ export default class Interpreter {
     if (case_.else === undefined) return new XOptional(this.#environment)
 
     return this.#evaluate(case_.else)
+  }
+
+  #let (let_: Let): TypedValue {
+    const environment = new Map(this.#environment)
+    for (const [name, expression] of let_.bindings) {
+      const interpreter = new Interpreter(expression, environment)
+      const value = interpreter.eval()
+      environment.set(name.name, value)
+    }
+    const interpreter = new Interpreter(let_.body, environment)
+    return interpreter.eval()
   }
 
   #array (array: ArrayGroup): TypedValue {

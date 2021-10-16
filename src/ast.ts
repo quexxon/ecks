@@ -28,6 +28,7 @@ export enum BinaryOperator {
   GreaterThanOrEqual = '>=',
   Or = '|',
   And = '&',
+  Optional = '??',
 }
 
 const TOKEN_TO_UNARY_OP = new Map([
@@ -47,7 +48,8 @@ const TOKEN_TO_BINARY_OP = new Map([
   [TokenKind.Greater, BinaryOperator.GreaterThan],
   [TokenKind.GreaterEqual, BinaryOperator.GreaterThanOrEqual],
   [TokenKind.Or, BinaryOperator.Or],
-  [TokenKind.And, BinaryOperator.And]
+  [TokenKind.And, BinaryOperator.And],
+  [TokenKind.DoubleQuestion, BinaryOperator.Optional]
 ])
 
 export function tokenToUnaryOperator (token: Token): UnaryOperator {
@@ -122,6 +124,12 @@ export interface Case {
   else?: Expression
 }
 
+export interface Let {
+  kind: 'let'
+  bindings: Array<[Identifier, Expression]>
+  body: Expression
+}
+
 export interface Grouping {
   kind: 'grouping'
   expression: Expression
@@ -167,6 +175,7 @@ export type Expression
   | Ternary
   | Cond
   | Case
+  | Let
   | Primitive
   | Grouping
   | ArrayGroup
@@ -217,6 +226,13 @@ export function case_ (
   alternative?: Expression
 ): Case {
   return { kind: 'case', target, branches, else: alternative }
+}
+
+export function let_ (
+  bindings: Array<[Identifier, Expression]>,
+  body: Expression
+): Let {
+  return { kind: 'let', bindings, body }
 }
 
 export function boolean (token: Token, environment: Environment): Primitive {

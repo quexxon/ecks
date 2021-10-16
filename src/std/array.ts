@@ -3,12 +3,22 @@ import { Environment, MethodType } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
+import XOptional from './optional'
 
 export default class XArray {
   kind = 'array'
   #value: TypedValue[]
   #environment: Environment
   methods: Record<string, MethodType> = {
+    at: {
+      arguments: [{ kind: 'integer' }],
+      call: (index: XInteger) => {
+        const value = (index.__value >= 0 && index.__value < this.#value.length)
+          ? this.#value[index.__value]
+          : undefined
+        return new XOptional(this.#environment, value)
+      }
+    },
     len: {
       arguments: [],
       call: () => new XInteger(this.#value.length, this.#environment)

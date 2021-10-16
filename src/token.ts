@@ -46,6 +46,7 @@ export enum TokenKind {
   Case,
   Cond,
   Else,
+  Let,
   True,
   False,
 }

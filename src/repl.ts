@@ -1,14 +1,37 @@
 import * as ReadLine from 'readline'
 import * as Chalk from 'chalk'
-// import { inspect } from 'util'
-import Interpreter from './interpreter'
 
+import Interpreter from './interpreter'
 import Parser from './parser'
 import Scanner from './scanner'
 import XString from './std/string'
 import XInteger from './std/integer'
 import XFloat from './std/float'
 import XBoolean from './std/boolean'
+import { TypedValue } from './ast'
+import XOptional from './std/optional'
+
+function prettyPrint (value: TypedValue): string {
+  const val = value instanceof XOptional && value.__value !== undefined ? value.__value : value
+  let str: string = val.__toString()
+  if (val instanceof XString) {
+    if (val.__value.includes("'")) {
+      str = `"${Chalk.green(val.__value)}"`
+    } else {
+      str = `'${Chalk.green(val.__value)}'`
+    }
+  } else if (val instanceof XInteger || val instanceof XFloat) {
+    str = Chalk.yellow(str)
+  } else if (val instanceof XBoolean) {
+    str = Chalk.magenta(str)
+  }
+
+  if (value instanceof XOptional && value.__value !== undefined) {
+    str = `some(${str})`
+  }
+
+  return str
+}
 
 const rl = ReadLine.createInterface({
   input: process.stdin,
@@ -41,20 +64,7 @@ rl.on('line', (line) => {
     const value = interpreter.eval()
     const duration = process.hrtime.bigint() - start
 
-    let printValue: string = value.__toString()
-    if (value instanceof XString) {
-      if (value.__value.includes("'")) {
-        printValue = `"${Chalk.green(value.__value)}"`
-      } else {
-        printValue = `'${Chalk.green(value.__value)}'`
-      }
-    } else if (value instanceof XInteger || value instanceof XFloat) {
-      printValue = Chalk.yellow(printValue)
-    } else if (value instanceof XBoolean) {
-      printValue = Chalk.magenta(printValue)
-    }
-
-    console.log(`${printValue} (${value.kind})`)
+    console.log(`${prettyPrint(value)} :: ${value.kind}`)
     if (process.env.DEBUG === '1') {
       console.log(`Elapsed: ${Number(duration) / 1e6}ms`)
     }

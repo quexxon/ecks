@@ -190,6 +190,7 @@ export default class Scanner {
       case 'case': this.#addToken(TokenKind.Case); break
       case 'cond': this.#addToken(TokenKind.Cond); break
       case 'else': this.#addToken(TokenKind.Else); break
+      case 'let': this.#addToken(TokenKind.Let); break
       case 'true': this.#addToken(TokenKind.True, true); break
       case 'false': this.#addToken(TokenKind.False, false); break
       default: this.#addToken(TokenKind.Identifier); break

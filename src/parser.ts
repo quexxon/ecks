@@ -16,7 +16,9 @@ import {
   identifier,
   ternary,
   cond,
-  case_
+  case_,
+  Identifier,
+  let_
 } from './ast'
 import { Environment } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
@@ -95,9 +97,19 @@ export default class Parser {
   }
 
   #factor (): Expression {
-    let expression: Expression = this.#method()
+    let expression: Expression = this.#optional()
 
     while (this.#match(TokenKind.Slash, TokenKind.Star)) {
+      expression = binary(expression, this.#previous(), this.#optional())
+    }
+
+    return expression
+  }
+
+  #optional (): Expression {
+    let expression: Expression = this.#method()
+
+    while (this.#match(TokenKind.DoubleQuestion)) {
       expression = binary(expression, this.#previous(), this.#method())
     }
 
@@ -140,10 +152,10 @@ export default class Parser {
       return unary(this.#previous(), this.#unary())
     }
 
-    return this.#conditional()
+    return this.#compound()
   }
 
-  #conditional (): Expression {
+  #compound (): Expression {
     if (this.#match(TokenKind.Cond)) {
       this.#consume(TokenKind.LeftBrace, 'Expected `{` following `cond`')
       const branches: Array<[Expression, Expression]> = []
@@ -197,6 +209,24 @@ export default class Parser {
         }
       }
       return case_(target, branches, alternative)
+    }
+
+    if (this.#match(TokenKind.Let)) {
+      const bindings: Array<[Identifier, Expression]> = []
+      this.#consume(TokenKind.LeftBrace, 'Expected `{` following `let`')
+      while (!this.#match(TokenKind.RightBrace)) {
+        const name = this.#primary()
+        if (name.kind !== 'identifier') throw new SyntaxError()
+        this.#match(TokenKind.Colon) // skip optional colon
+        const expression = this.#expression()
+        this.#match(TokenKind.Comma) // skip optional comma
+        bindings.push([name, expression])
+        if (this.#isAtEnd()) {
+          throw new UnmatchedOpeningChar('Expected closing `}` in `let` expression')
+        }
+      }
+      const body = this.#expression()
+      return let_(bindings, body)
     }
 
     return this.#primary()
