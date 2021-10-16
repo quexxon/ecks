@@ -100,20 +100,26 @@ export default class Scanner {
     const isTemplateString = quoteChar === '`'
     let inExpression = false
     let depth = 0
+    let isEscape = false
 
     while ((this.#peek() !== quoteChar || inExpression) && !this.#isAtEnd()) {
-      if (isTemplateString && this.#peek() === '{') {
-        if (depth === 0) inExpression = true
-        depth++
-      }
+      if (isEscape) {
+        isEscape = false
+      } else {
+        if (isTemplateString && this.#peek() === '{') {
+          if (depth === 0) inExpression = true
+          depth++
+        }
 
-      if (isTemplateString && this.#peek() === '}') {
-        depth--
-        if (depth < 0) throw new SyntaxError('Unmatched `}` in template string')
-        if (depth === 0) inExpression = false
+        if (isTemplateString && this.#peek() === '}') {
+          depth--
+          if (depth < 0) throw new SyntaxError('Unmatched `}` in template string')
+          if (depth === 0) inExpression = false
+        }
       }
 
       if (this.#peek() === '\\') {
+        isEscape = true
         this.#advance()
         if (this.#peek() === quoteChar) {
           this.#advance()
@@ -130,47 +136,12 @@ export default class Scanner {
     // Skip the closing quote
     this.#advance()
 
-    const literal = this.#escapeString(this.#source.slice(this.#start + 1, this.#current - 1))
+    const literal = this.#source.slice(this.#start + 1, this.#current - 1)
 
     this.#addToken(
       isTemplateString ? TokenKind.TemplateString : TokenKind.String,
       literal
     )
-  }
-
-  #escapeString (literal: string): string {
-    let start = 0
-    let end = 0
-    let isEscape = false
-    const segments = []
-
-    for (let i = 0; i < literal.length; i++) {
-      const char = literal[i]
-      if (isEscape) {
-        segments.push(literal.slice(end, start))
-        switch (char) {
-          case 'n':
-            segments.push('\n')
-            end = i + 1
-            break
-          case 't':
-            segments.push('\t')
-            end = i + 1
-            break
-          default:
-            end = i
-            break
-        }
-        isEscape = false
-      } else if (char === '\\') {
-        start = i
-        isEscape = true
-      }
-    }
-
-    segments.push(literal.slice(end))
-
-    return segments.join('')
   }
 
   #scanNumber (firstChar: string): void {

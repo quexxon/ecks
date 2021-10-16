@@ -4,6 +4,41 @@ import XBoolean from './boolean'
 import XInteger from './integer'
 
 export default class XString {
+  static #escapeString (literal: string): string {
+    let start = 0
+    let end = 0
+    let isEscape = false
+    const segments = []
+
+    for (let i = 0; i < literal.length; i++) {
+      const char = literal[i]
+      if (isEscape) {
+        segments.push(literal.slice(end, start))
+        switch (char) {
+          case 'n':
+            segments.push('\n')
+            end = i + 1
+            break
+          case 't':
+            segments.push('\t')
+            end = i + 1
+            break
+          default:
+            end = i
+            break
+        }
+        isEscape = false
+      } else if (char === '\\') {
+        start = i
+        isEscape = true
+      }
+    }
+
+    segments.push(literal.slice(end))
+
+    return segments.join('')
+  }
+
   kind = 'string'
   #value: string
   #environment: Environment
@@ -15,7 +50,7 @@ export default class XString {
   }
 
   constructor (value: string, environment: Environment) {
-    this.#value = value
+    this.#value = XString.#escapeString(value)
     this.#environment = environment
   }
 

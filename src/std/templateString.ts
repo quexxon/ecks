@@ -21,8 +21,20 @@ export default class XTemplateString {
     let depth = 0
     let start = 0
     let end = 0
+    let isEscape = false
     for (let i = 0; i < this.#value.length; i++) {
+      if (isEscape) {
+        isEscape = false
+        continue
+      }
+
       const char = this.#value[i]
+
+      if (char === '\\') {
+        isEscape = true
+        continue
+      }
+
       if (char === '{') {
         if (depth === 0) start = i
         depth++

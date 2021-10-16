@@ -360,7 +360,7 @@ export default class Parser {
       return lambda(parameters, body, offset)
     }
 
-    throw new Error('WHOOPS!')
+    throw new SyntaxError('WHOOPS!')
   }
 
   #match (...tokenKinds: TokenKind[]): boolean {
