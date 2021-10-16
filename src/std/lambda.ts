@@ -1,6 +1,7 @@
 import { Expression, Identifier, TypedValue } from '../ast'
 import Interpreter from '../interpreter'
 import { Environment, MethodType } from '../types'
+import XArray from './array'
 
 interface Lambda {
   params: Identifier[]
@@ -15,6 +16,10 @@ export default class XLambda {
     call: {
       arguments: [],
       call: (...args: TypedValue[]) => this.call(...args)
+    },
+    apply: {
+      arguments: [],
+      call: (args: XArray) => this.call(...args.__value)
     }
   }
 
