@@ -7,6 +7,7 @@ import {
   Expression,
   Grouping,
   Identifier,
+  Index,
   Lambda,
   Let,
   MapGroup,
@@ -25,22 +26,23 @@ import XLambda from './std/lambda'
 import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
+import XTemplateString from './std/templateString'
 import { Environment } from './types'
 
 export default class Interpreter {
   #expression: Expression
   #environment: Environment
 
-  constructor(expression: Expression, environment: Environment = new Map()) {
+  constructor (expression: Expression, environment: Environment = new Map()) {
     this.#expression = expression
     this.#environment = environment
   }
 
-  eval(): TypedValue {
+  eval (): TypedValue {
     return this.#evaluate(this.#expression)
   }
 
-  #evaluate(expression: Expression): TypedValue {
+  #evaluate (expression: Expression): TypedValue {
     switch (expression.kind) {
       case 'primitive': return this.#primitive(expression)
       case 'grouping': return this.#grouping(expression)
@@ -54,21 +56,26 @@ export default class Interpreter {
       case 'set': return this.#set(expression)
       case 'map': return this.#map(expression)
       case 'method-call': return this.#methodCall(expression)
+      case 'index': return this.#index(expression)
       case 'lambda': return this.#lambda(expression)
       case 'optional': return this.#optional(expression)
       case 'identifier': return this.#identifier(expression)
     }
   }
 
-  #primitive(primitive: Primitive): TypedValue {
-    return primitive.value
+  #primitive (primitive: Primitive): TypedValue {
+    return (
+      primitive.value instanceof XTemplateString
+        ? primitive.value.evaluate(this.#environment)
+        : primitive.value
+    )
   }
 
-  #grouping(grouping: Grouping): TypedValue {
+  #grouping (grouping: Grouping): TypedValue {
     return this.#evaluate(grouping.expression)
   }
 
-  #unary(unary: Unary): TypedValue {
+  #unary (unary: Unary): TypedValue {
     const operand = this.#evaluate(unary.operand)
 
     switch (unary.operator) {
@@ -83,7 +90,7 @@ export default class Interpreter {
     throw new TypeError()
   }
 
-  #binary(binary: Binary): TypedValue {
+  #binary (binary: Binary): TypedValue {
     const l = this.#evaluate(binary.left)
     const r = this.#evaluate(binary.right)
 
@@ -131,7 +138,7 @@ export default class Interpreter {
     throw new TypeError()
   }
 
-  #ternary(ternary: Ternary): TypedValue {
+  #ternary (ternary: Ternary): TypedValue {
     const condition = this.#evaluate(ternary.antecedent)
 
     if (!(condition instanceof XBoolean)) {
@@ -145,7 +152,7 @@ export default class Interpreter {
     }
   }
 
-  #cond(cond: Cond): TypedValue {
+  #cond (cond: Cond): TypedValue {
     let result: TypedValue | undefined
     for (const [antecedent, consequent] of cond.branches) {
       const condition = this.#evaluate(antecedent)
@@ -170,7 +177,7 @@ export default class Interpreter {
     return result
   }
 
-  #case(case_: Case): TypedValue {
+  #case (case_: Case): TypedValue {
     const target = this.#evaluate(case_.target)
     if (target instanceof XLambda || target instanceof XOptional) {
       throw new TypeError()
@@ -204,7 +211,7 @@ export default class Interpreter {
     return result
   }
 
-  #let(let_: Let): TypedValue {
+  #let (let_: Let): TypedValue {
     const environment = new Map(this.#environment)
     for (const [name, expression] of let_.bindings) {
       const interpreter = new Interpreter(expression, environment)
@@ -215,22 +222,22 @@ export default class Interpreter {
     return interpreter.eval()
   }
 
-  #array(array: ArrayGroup): TypedValue {
+  #array (array: ArrayGroup): TypedValue {
     return new XArray(array.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
-  #set(set: SetGroup): TypedValue {
+  #set (set: SetGroup): TypedValue {
     return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
-  #map(map: MapGroup): TypedValue {
+  #map (map: MapGroup): TypedValue {
     return new XMap(
       map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
       this.#environment
     )
   }
 
-  #methodCall(methodCall: MethodCall): TypedValue {
+  #methodCall (methodCall: MethodCall): TypedValue {
     const receiver = this.#evaluate(methodCall.receiver)
 
     if (methodCall.identifier.name in receiver.methods) {
@@ -241,23 +248,37 @@ export default class Interpreter {
     throw new TypeError(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
   }
 
-  #lambda(lambda: Lambda): TypedValue {
+  #index (index: Index): TypedValue {
+    const receiver = this.#evaluate(index.receiver)
+
+    if (receiver instanceof XArray) {
+      return receiver.methods.at.call(this.#evaluate(index.index))
+    }
+
+    if (receiver instanceof XMap) {
+      return receiver.methods.get.call(this.#evaluate(index.index))
+    }
+
+    throw new TypeError(`Index expressions are not supported for ${receiver.kind}`)
+  }
+
+  #lambda (lambda: Lambda): TypedValue {
     return new XLambda({
       params: lambda.parameters,
       body: lambda.body
     }, this.#environment)
   }
 
-  #optional(optional: Optional): XOptional {
+  #optional (optional: Optional): XOptional {
     const value = optional.value === undefined ? undefined : this.#evaluate(optional.value)
     return new XOptional(this.#environment, value)
   }
 
-  #identifier(identifier: Identifier): TypedValue {
+  #identifier (identifier: Identifier): TypedValue {
     const value = this.#environment.get(identifier.name)
 
     if (value === undefined) {
-      throw new Error(`Unrecognized identifier: ${identifier.name}`)
+      throw new TypeError(`Unrecognized identifier: ${identifier.name}`)
     }
 
     return value

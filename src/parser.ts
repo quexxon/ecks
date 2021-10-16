@@ -20,7 +20,8 @@ import {
   Identifier,
   let_,
   map,
-  optional
+  optional,
+  index
 } from './ast'
 import { Environment } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
@@ -130,6 +131,22 @@ export default class Parser {
 
   #methodCall (expression: Expression): Expression {
     const offset = this.#previous().offset
+
+    if (this.#match(TokenKind.Integer)) {
+      const indexExpression = integer(this.#previous(), this.#environment)
+      return index(expression, indexExpression, offset)
+    }
+
+    if (this.#match(TokenKind.LeftParen)) {
+      const indexExpression = this.#expression()
+      this.#consume(
+        TokenKind.RightParen,
+        'Expected `)` following expression',
+        UnmatchedOpeningChar
+      )
+      return index(expression, indexExpression, offset)
+    }
+
     if (this.#match(TokenKind.Identifier)) {
       const identifier = this.#previous()
       const args = []
@@ -192,7 +209,7 @@ export default class Parser {
       this.#consume(TokenKind.LeftBrace, 'Expected `{` following `case`')
       while (!this.#match(TokenKind.RightBrace)) {
         if (this.#match(TokenKind.Else)) {
-          this.#consume(TokenKind.Colon, 'Expected `:` following `else`')
+          this.#match(TokenKind.Colon) // skip optional colon
           alternative = this.#expression()
           this.#consume(
             TokenKind.RightBrace,
@@ -202,7 +219,7 @@ export default class Parser {
           break
         }
         const antecedent = this.#expression()
-        this.#consume(TokenKind.Colon, 'Expected `:` between case and expression')
+        this.#match(TokenKind.Colon) // skip optional colon
         const consequent = this.#expression()
         branches.push([antecedent, consequent])
         this.#match(TokenKind.Comma) // skip optional comma
@@ -260,7 +277,15 @@ export default class Parser {
       return optional(this.#previous().offset)
     }
     if (this.#match(TokenKind.Some)) {
-      return optional(this.#previous().offset, this.#expression())
+      const offset = this.#previous().offset
+      this.#consume(TokenKind.LeftParen, 'Expected `(` following `some`')
+      const expression = this.#expression()
+      this.#consume(
+        TokenKind.RightParen,
+        'Expected `)` following expression',
+        UnmatchedOpeningChar
+      )
+      return optional(offset, expression)
     }
 
     if (this.#match(TokenKind.Identifier)) {

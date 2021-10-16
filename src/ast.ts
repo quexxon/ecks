@@ -164,6 +164,13 @@ export interface MethodCall {
   offset: number
 }
 
+export interface Index {
+  kind: 'index'
+  receiver: Expression
+  index: Expression
+  offset: number
+}
+
 export interface Optional {
   kind: 'optional'
   value?: Expression
@@ -196,6 +203,7 @@ export type Expression
   | SetGroup
   | MapGroup
   | MethodCall
+  | Index
   | Lambda
   | Optional
   | Identifier
@@ -328,6 +336,10 @@ export function methodCall (
     arguments: args,
     offset
   }
+}
+
+export function index (receiver: Expression, index: Expression, offset: number): Index {
+  return { kind: 'index', receiver, index, offset }
 }
 
 export function lambda (
