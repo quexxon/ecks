@@ -349,3 +349,72 @@ export function lambda (
 ): Lambda {
   return { kind: 'lambda', parameters, body, offset }
 }
+
+export function toString (expr: Expression): string {
+  switch (expr.kind) {
+    case 'unary':
+      return `${expr.operator}${toString(expr.operand)}`
+    case 'binary':
+      return `${toString(expr.left)} ${expr.operator} ${toString(expr.right)}`
+    case 'ternary':
+      return `${toString(expr.antecedent)} ? ${toString(expr.consequent)} : ${toString(expr.alternative)}`
+    case 'cond': {
+      const branches = expr.branches.map(([antecedent, consequent]) => {
+        return `${toString(antecedent)}: ${toString(consequent)}`
+      }).join(', ')
+      const elseBranch = expr.else === undefined ? '' : `else: ${toString(expr.else)}`
+      let body = ''
+      if (branches !== '' && elseBranch !== '') {
+        body = `${branches}, ${elseBranch}`
+      } else if (branches !== '') {
+        body = branches
+      } else if (elseBranch !== '') {
+        body = elseBranch
+      }
+      return `cond {${body}}`
+    }
+    case 'case': {
+      const branches = expr.branches.map(([case_, expression]) => {
+        return `${toString(case_)}: ${toString(expression)}`
+      }).join(', ')
+      const elseBranch = expr.else === undefined ? '' : `else: ${toString(expr.else)}`
+      let body = ''
+      if (branches !== '' && elseBranch !== '') {
+        body = `${branches}, ${elseBranch}`
+      } else if (branches !== '') {
+        body = branches
+      } else if (elseBranch !== '') {
+        body = elseBranch
+      }
+      return `case ${toString(expr.target)} {${body}}`
+    }
+    case 'let': {
+      const bindings = expr.bindings.map(([identifier, expression]) => {
+        return `${toString(identifier)}: ${toString(expression)}`
+      }).join(', ')
+      return `let {${bindings}} ${toString(expr.body)}`
+    }
+    case 'primitive': return expr.value.__toString()
+    case 'grouping': return `(${toString(expr.expression)})`
+    case 'array': return `[${expr.elements.map(toString).join(' ')}]`
+    case 'set': return `$[${expr.elements.map(toString).join(' ')}]`
+    case 'map': {
+      const entries = expr.elements.map(([k, v]) => {
+        return `${toString(k)}: ${toString(v)}`
+      }).join(', ')
+      return `{${entries}}`
+    }
+    case 'method-call': {
+      const args = expr.arguments.length === 0
+        ? ''
+        : `(${expr.arguments.map(toString).join(', ')})`
+      return `${toString(expr.receiver)}.${toString(expr.identifier)}${args}`
+    }
+    case 'index': return `${toString(expr.receiver)}.${toString(expr.index)}`
+    case 'lambda':
+      return `|${expr.parameters.map(toString).join(' ')}| ${toString(expr.body)}`
+    case 'optional':
+      return expr.value === undefined ? 'none' : `some(${toString(expr.value)})`
+    case 'identifier': return expr.name
+  }
+}

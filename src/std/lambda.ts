@@ -1,4 +1,4 @@
-import { Expression, Identifier, TypedValue } from '../ast'
+import { Expression, Identifier, toString, TypedValue } from '../ast'
 import Interpreter from '../interpreter'
 import { Environment } from '../types'
 import XArray from './array'
@@ -39,6 +39,6 @@ export default class XLambda {
   }
 
   __toString (): string {
-    return `|${this.#value.params.map(x => x.name).join(', ')}|`
+    return `|${this.#value.params.map(x => x.name).join(' ')}| ${toString(this.#value.body)}`
   }
 }
