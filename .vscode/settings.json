@@ -2,5 +2,8 @@
     "standard.enable": true,
     "standard.autoFixOnSave": true,
     "standard.engine": "ts-standard",
-    "standard.usePackageJson": true
+    "standard.usePackageJson": true,
+    "cSpell.words": [
+        "Ecks"
+    ]
 }

@@ -1,7 +1,6 @@
 import {
   ArrayGroup,
   Binary,
-  BinaryOperator,
   Case,
   Cond,
   Expression,
@@ -78,13 +77,18 @@ export default class Interpreter {
   #unary (unary: Unary): TypedValue {
     const operand = this.#evaluate(unary.operand)
 
-    switch (unary.operator) {
-      case UnaryOperator.Negation:
-        if ('neg' in operand) return operand.neg()
-        break
-      case UnaryOperator.Not:
-        if ('not' in operand) return operand.not()
-        break
+    // TypeScript bug: Symbols cannot be used to index class
+    // Ref: https://github.com/microsoft/TypeScript/issues/38009
+    interface UnaryOperand { [key: symbol]: () => TypedValue }
+
+    if (unary.operator === UnaryOperator.Negation) {
+      if (Symbol.for('neg') in operand) {
+        return ((operand as object) as UnaryOperand)[Symbol.for('neg')]()
+      }
+    }
+
+    if (Symbol.for(unary.operator) in operand) {
+      return ((operand as object) as UnaryOperand)[Symbol.for(unary.operator)]()
     }
 
     throw new TypeError()
@@ -94,45 +98,12 @@ export default class Interpreter {
     const l = this.#evaluate(binary.left)
     const r = this.#evaluate(binary.right)
 
-    switch (binary.operator) {
-      case BinaryOperator.Addition:
-        if ('add' in l) return l.add(r)
-        break
-      case BinaryOperator.Subtraction:
-        if ('sub' in l) return l.sub(r)
-        break
-      case BinaryOperator.Multiplication:
-        if ('mult' in l) return l.mult(r)
-        break
-      case BinaryOperator.Division:
-        if ('div' in l) return l.div(r)
-        break
-      case BinaryOperator.Equal:
-        if ('eq' in l) return l.eq(r)
-        break
-      case BinaryOperator.NotEqual:
-        if ('neq' in l) return l.neq(r)
-        break
-      case BinaryOperator.LessThan:
-        if ('lt' in l) return l.lt(r)
-        break
-      case BinaryOperator.LessThanOrEqual:
-        if ('lte' in l) return l.lte(r)
-        break
-      case BinaryOperator.GreaterThan:
-        if ('gt' in l) return l.gt(r)
-        break
-      case BinaryOperator.GreaterThanOrEqual:
-        if ('gte' in l) return l.gte(r)
-        break
-      case BinaryOperator.Or:
-        if ('or' in l) return l.or(r)
-        break
-      case BinaryOperator.And:
-        if ('and' in l) return l.and(r)
-        break
-      case BinaryOperator.Optional:
-        if ('opt' in l) return l.opt(r)
+    // TypeScript bug: Symbols cannot be used to index class
+    // Ref: https://github.com/microsoft/TypeScript/issues/38009
+    interface BinaryOperand { [key: symbol]: (r: any) => TypedValue }
+
+    if (Symbol.for(binary.operator) in l) {
+      return ((l as object) as BinaryOperand)[Symbol.for(binary.operator)](r)
     }
 
     throw new TypeError()
@@ -240,9 +211,11 @@ export default class Interpreter {
   #methodCall (methodCall: MethodCall): TypedValue {
     const receiver = this.#evaluate(methodCall.receiver)
 
-    if (methodCall.identifier.name in receiver.methods) {
-      const method = receiver.methods[methodCall.identifier.name]
-      return method.call.apply(null, methodCall.arguments.map(exp => this.#evaluate(exp)))
+    interface XObject { [key: string]: (...args: any) => TypedValue }
+
+    if (methodCall.identifier.name in receiver) {
+      const method = ((receiver as object) as XObject)[methodCall.identifier.name]
+      return method.apply(receiver, methodCall.arguments.map(exp => this.#evaluate(exp)))
     }
 
     throw new TypeError(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
@@ -252,11 +225,11 @@ export default class Interpreter {
     const receiver = this.#evaluate(index.receiver)
 
     if (receiver instanceof XArray) {
-      return receiver.methods.at.call(this.#evaluate(index.index))
+      return receiver.at(this.#evaluate(index.index))
     }
 
     if (receiver instanceof XMap) {
-      return receiver.methods.get.call(this.#evaluate(index.index))
+      return receiver.get(this.#evaluate(index.index))
     }
 
     throw new TypeError(`Index expressions are not supported for ${receiver.kind}`)

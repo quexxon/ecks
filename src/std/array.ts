@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment, MethodType } from '../types'
+import { Environment } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
@@ -9,57 +9,6 @@ export default class XArray {
   kind = 'array'
   #value: TypedValue[]
   #environment: Environment
-  methods: Record<string, MethodType> = {
-    at: {
-      arguments: [{ kind: 'integer' }],
-      call: (index: XInteger) => {
-        const value = (index.__value >= 0 && index.__value < this.#value.length)
-          ? this.#value[index.__value]
-          : undefined
-        return new XOptional(this.#environment, value)
-      }
-    },
-    len: {
-      arguments: [],
-      call: () => new XInteger(this.#value.length, this.#environment)
-    },
-    map: {
-      arguments: [
-        { kind: 'lambda' }
-      ],
-      call: (lambda: XLambda) => {
-        return this.__new(this.#value.map(v => lambda.call(v)))
-      }
-    },
-    keep: {
-      arguments: [
-        { kind: 'lambda' }
-      ],
-      call: (lambda: XLambda) => {
-        return this.__new(this.#value.filter(v => {
-          const resp = lambda.call(v)
-          if (!(resp instanceof XBoolean)) {
-            throw new Error('Lambda must return a boolean')
-          }
-          return resp.__value
-        }))
-      }
-    },
-    drop: {
-      arguments: [
-        { kind: 'lambda' }
-      ],
-      call: (lambda: XLambda) => {
-        return this.__new(this.#value.filter(v => {
-          const resp = lambda.call(v)
-          if (!(resp instanceof XBoolean)) {
-            throw new Error('Lambda must return a boolean')
-          }
-          return !resp.__value
-        }))
-      }
-    }
-  }
 
   constructor (value: TypedValue[], environment: Environment) {
     if (value.length > 1) {
@@ -72,13 +21,43 @@ export default class XArray {
     this.#environment = environment
   }
 
-  get __value (): TypedValue[] { return this.#value }
-
-  get __length (): number {
-    return this.#value.length
+  at (index: TypedValue): XOptional {
+    if (!(index instanceof XInteger)) throw new TypeError()
+    const value = (index.__value >= 0 && index.__value < this.#value.length)
+      ? this.#value[index.__value]
+      : undefined
+    return new XOptional(this.#environment, value)
   }
 
-  add (value: TypedValue): XArray {
+  len (): XInteger {
+    return new XInteger(this.#value.length, this.#environment)
+  }
+
+  map (lambda: XLambda): XArray {
+    return this.__new(this.#value.map(v => lambda.call(v)))
+  }
+
+  keep (lambda: XLambda): XArray {
+    return this.__new(this.#value.filter(v => {
+      const resp = lambda.call(v)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      return resp.__value
+    }))
+  }
+
+  drop (lambda: XLambda): XArray {
+    return this.__new(this.#value.filter(v => {
+      const resp = lambda.call(v)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      return !resp.__value
+    }))
+  }
+
+  [Symbol.for('+')] (value: TypedValue): XArray {
     if (!(value instanceof XArray)) throw new TypeError()
     if (value.__length === 0) return this
     if (this.__length === 0) return value
@@ -86,12 +65,18 @@ export default class XArray {
     return this.__new(this.#value.concat(value.__value))
   }
 
-  mult (value: TypedValue): XArray {
+  [Symbol.for('*')] (value: TypedValue): XArray {
     if (!(value instanceof XInteger)) throw new TypeError()
     if (value.__value < 0) throw new Error('Cannot multiply array by a negative integer')
     const array = []
     for (let n = 0; n < value.__value; n++) array.push(...this.#value)
     return this.__new(array)
+  }
+
+  get __value (): TypedValue[] { return this.#value }
+
+  get __length (): number {
+    return this.#value.length
   }
 
   __new (value: TypedValue[]): XArray {

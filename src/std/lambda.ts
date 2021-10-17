@@ -1,6 +1,6 @@
 import { Expression, Identifier, TypedValue } from '../ast'
 import Interpreter from '../interpreter'
-import { Environment, MethodType } from '../types'
+import { Environment } from '../types'
 import XArray from './array'
 
 interface Lambda {
@@ -12,20 +12,14 @@ export default class XLambda {
   kind = 'lambda'
   #value: Lambda
   #environment: Environment
-  methods: Record<string, MethodType> = {
-    call: {
-      arguments: [],
-      call: (...args: TypedValue[]) => this.call(...args)
-    },
-    apply: {
-      arguments: [],
-      call: (args: XArray) => this.call(...args.__value)
-    }
-  }
 
   constructor (value: Lambda, environment: Environment) {
     this.#value = value
     this.#environment = environment
+  }
+
+  apply (args: XArray): TypedValue {
+    return this.call(...args.__value)
   }
 
   call (...args: TypedValue[]): TypedValue {

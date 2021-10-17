@@ -1,30 +1,13 @@
 import { TypedValue } from '../ast'
-import { Environment, MethodType } from '../types'
+import { Environment } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
 
 export default class XSet {
   kind = 'set'
-  // TODO: Replace with a legit hash set
   #value: Map<string, TypedValue>
   #environment: Environment
-  methods: Record<string, MethodType> = {
-    len: {
-      arguments: [],
-      call: () => new XInteger(this.#value.size, this.#environment)
-    },
-    has: {
-      arguments: [],
-      call: (value: TypedValue): XBoolean => {
-        if (value instanceof XLambda) {
-          throw new TypeError()
-        }
-
-        return new XBoolean(this.#value.has(value.__toString()), this.#environment)
-      }
-    }
-  }
 
   constructor (value: TypedValue[], environment: Environment) {
     if (value.length > 1) {
@@ -37,18 +20,22 @@ export default class XSet {
     this.#environment = environment
   }
 
-  get len (): number {
-    return this.#value.size
+  has (value: TypedValue): XBoolean {
+    if (value instanceof XLambda) {
+      throw new TypeError()
+    }
+
+    return new XBoolean(this.#value.has(value.__toString()), this.#environment)
   }
 
-  add (value: TypedValue): XSet {
-    return this.union(value)
+  len (): XInteger {
+    return new XInteger(this.__length, this.#environment)
   }
 
   union (value: TypedValue): XSet {
     if (!(value instanceof XSet)) throw new TypeError()
-    if (value.len === 0) return this
-    if (this.len === 0) return value
+    if (value.__length === 0) return this
+    if (this.__length === 0) return value
     if (value.__value.values().next().value.kind !==
       this.#value.values().next().value.kind
     ) {
@@ -59,7 +46,15 @@ export default class XSet {
     )
   }
 
+  [Symbol.for('+')] (value: TypedValue): XSet {
+    return this.union(value)
+  }
+
   get __value (): Map<string, TypedValue> { return this.#value }
+
+  get __length (): number {
+    return this.#value.size
+  }
 
   __new (value: TypedValue[]): XSet {
     return new XSet(value, this.#environment)

@@ -1,43 +1,41 @@
 import { TypedValue } from '../ast'
-import { Environment, MethodType } from '../types'
+import { Environment } from '../types'
 import XString from './string'
 
 export default class XBoolean {
   kind = 'boolean'
   #value: boolean
   #environment: Environment
-  methods: Record<string, MethodType> = {
-    str: {
-      arguments: [],
-      call: () => new XString(this.__toString(), this.#environment)
-    }
-  }
 
   constructor (value: boolean, environment: Environment) {
     this.#value = value
     this.#environment = environment
   }
 
-  not (): XBoolean {
+  str (): XString {
+    return new XString(this.__toString(), this.#environment)
+  }
+
+  [Symbol.for('!')] (): XBoolean {
     return this.__new(!this.#value)
   }
 
-  eq (value: TypedValue): XBoolean {
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
     return this.__new(this.#value === value.__value)
   }
 
-  neq (value: TypedValue): XBoolean {
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
     return this.__new(this.#value !== value.__value)
   }
 
-  or (value: TypedValue): XBoolean {
+  [Symbol.for('or')] (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
     return this.__new(this.#value || value.__value)
   }
 
-  and (value: TypedValue): XBoolean {
+  [Symbol.for('and')] (value: TypedValue): XBoolean {
     if (!(value instanceof XBoolean)) throw new TypeError()
     return this.__new(this.#value && value.__value)
   }

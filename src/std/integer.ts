@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment, MethodType } from '../types'
+import { Environment } from '../types'
 import XBoolean from './boolean'
 import XFloat from './float'
 import XString from './string'
@@ -12,23 +12,25 @@ export default class XInteger {
   kind = 'integer'
   #value: number
   #environment: Environment
-  methods: Record<string, MethodType> = {
-    float: {
-      arguments: [],
-      call: () => new XFloat(this.#value, this.#environment)
-    },
-    str: {
-      arguments: [],
-      call: () => new XString(this.__toString(), this.#environment)
-    }
-  }
 
   constructor (value: number, environment: Environment) {
     this.#value = Math.trunc(value)
     this.#environment = environment
   }
 
-  add (value: TypedValue): XInteger | XFloat {
+  float (): XFloat {
+    return new XFloat(this.#value, this.#environment)
+  }
+
+  str (): XString {
+    return new XString(this.__toString(), this.#environment)
+  }
+
+  [Symbol.for('neg')] (): XInteger {
+    return this.__new(-this.#value)
+  }
+
+  [Symbol.for('+')] (value: TypedValue): XInteger | XFloat {
     if (!isNumber(value)) throw new TypeError()
 
     const n = this.#value + value.__value
@@ -36,19 +38,19 @@ export default class XInteger {
     return value instanceof XFloat ? new XFloat(n, this.#environment) : this.__new(n)
   }
 
-  sub (value: TypedValue): XInteger | XFloat {
+  [Symbol.for('-')] (value: TypedValue): XInteger | XFloat {
     if (!isNumber(value)) throw new TypeError()
     const n = this.#value - value.__value
     return value instanceof XFloat ? new XFloat(n, this.#environment) : this.__new(n)
   }
 
-  mult (value: TypedValue): XInteger | XFloat {
+  [Symbol.for('*')] (value: TypedValue): XInteger | XFloat {
     if (!isNumber(value)) throw new TypeError()
     const n = this.#value * value.__value
     return value instanceof XFloat ? new XFloat(n, this.#environment) : this.__new(n)
   }
 
-  div (value: TypedValue): XInteger | XFloat {
+  [Symbol.for('/')] (value: TypedValue): XInteger | XFloat {
     if (!isNumber(value)) throw new TypeError()
     if (value instanceof XFloat) {
       return new XFloat(this.#value / value.__value, this.#environment)
@@ -56,36 +58,32 @@ export default class XInteger {
     return this.__new(Math.trunc(this.#value / value.__value))
   }
 
-  neg (): XInteger {
-    return this.__new(-this.#value)
-  }
-
-  eq (value: TypedValue): XBoolean {
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value === value.__value, this.#environment)
   }
 
-  neq (value: TypedValue): XBoolean {
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value !== value.__value, this.#environment)
   }
 
-  lt (value: TypedValue): XBoolean {
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value < value.__value, this.#environment)
   }
 
-  lte (value: TypedValue): XBoolean {
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value <= value.__value, this.#environment)
   }
 
-  gt (value: TypedValue): XBoolean {
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value > value.__value, this.#environment)
   }
 
-  gte (value: TypedValue): XBoolean {
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
     return new XBoolean(this.#value >= value.__value, this.#environment)
   }

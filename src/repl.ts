@@ -1,18 +1,16 @@
 import * as ReadLine from 'readline'
 import * as Chalk from 'chalk'
 
-import Interpreter from './interpreter'
-import Parser from './parser'
-import Scanner from './scanner'
-import XString from './std/string'
-import XInteger from './std/integer'
-import XFloat from './std/float'
-import XBoolean from './std/boolean'
 import { TypedValue } from './ast'
-import XOptional from './std/optional'
+import Ecks from '.'
 import XArray from './std/array'
-import XSet from './std/set'
+import XBoolean from './std/boolean'
+import XFloat from './std/float'
+import XInteger from './std/integer'
 import XMap from './std/map'
+import XOptional from './std/optional'
+import XSet from './std/set'
+import XString from './std/string'
 
 function prettyPrint (value: TypedValue): string {
   if (value instanceof XString) {
@@ -49,11 +47,7 @@ function prettyPrint (value: TypedValue): string {
 
   if (value instanceof XMap) {
     const entries = Array.from(value.__value.entries()).map(([key, val]) => {
-      const scanner = new Scanner(key)
-      const parser = new Parser(scanner.scan())
-      const interpreter = new Interpreter(parser.parse())
-
-      return `${prettyPrint(interpreter.eval())}: ${prettyPrint(val)}`
+      return `${prettyPrint(value.__keys.get(key) as TypedValue)}: ${prettyPrint(val)}`
     })
     return `{${entries.join(', ')}}`
   }
@@ -86,10 +80,7 @@ rl.on('line', (line) => {
 
   try {
     const start = process.hrtime.bigint()
-    const scanner = new Scanner(input)
-    const parser = new Parser(scanner.scan())
-    const interpreter = new Interpreter(parser.parse())
-    const value = interpreter.eval()
+    const value = Ecks.eval(input)
     const duration = process.hrtime.bigint() - start
 
     console.log(`${prettyPrint(value)} :: ${value.kind}`)

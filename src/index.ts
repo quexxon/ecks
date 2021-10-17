@@ -1,0 +1,128 @@
+import { Environment } from './types'
+import { TypedValue } from './ast'
+import Interpreter from './interpreter'
+import Parser from './parser'
+import Scanner from './scanner'
+import XArray from './std/array'
+import XBoolean from './std/boolean'
+import XFloat from './std/float'
+import XInteger from './std/integer'
+import XOptional from './std/optional'
+import XSet from './std/set'
+import XString from './std/string'
+import XMap from './std/map'
+
+interface IntegerHint {
+  kind: 'integer'
+  value: number
+}
+
+interface FloatHint {
+  kind: 'float'
+  value: number
+}
+
+interface OptionalHint {
+  kind: 'optional'
+  value?: unknown
+}
+
+type TypeHint
+  = IntegerHint
+  | FloatHint
+  | OptionalHint
+
+function isTypeHint (value: unknown): value is TypeHint {
+  if (typeof value !== 'object' || value === null) return false
+
+  const { kind } = value as { kind: string, value?: unknown }
+
+  return (
+    typeof kind === 'string' &&
+    ['integer', 'float', 'optional'].includes(kind)
+  )
+}
+
+export default {
+  eval (source: string, environment: Environment = new Map()): TypedValue {
+    const scanner = new Scanner(source)
+    const parser = new Parser(scanner.scan(), environment)
+    const interpreter = new Interpreter(parser.parse(), environment)
+    return interpreter.eval()
+  },
+
+  fromJs (value: unknown, environment: Environment = new Map()): TypedValue {
+    if (typeof value === 'number') {
+      if (Math.trunc(value) === value) {
+        return new XInteger(value, environment)
+      } else {
+        return new XFloat(value, environment)
+      }
+    }
+
+    if (typeof value === 'boolean') {
+      return new XBoolean(value, environment)
+    }
+
+    if (typeof value === 'string') {
+      return new XString(value, environment)
+    }
+
+    if (typeof value === 'undefined') {
+      return new XOptional(environment)
+    }
+
+    if (Array.isArray(value)) {
+      return new XArray(value.map(v => this.fromJs(v, environment)), environment)
+    }
+
+    if (value instanceof Set) {
+      return new XSet(Array.from(value).map(v => this.fromJs(v, environment)), environment)
+    }
+
+    if (value instanceof Map) {
+      return new XMap(Array.from(value.entries()).map(([k, v]) => {
+        return [this.fromJs(k, environment), this.fromJs(v, environment)]
+      }), environment)
+    }
+
+    if (isTypeHint(value)) {
+      switch (value.kind) {
+        case 'integer': return new XInteger(value.value, environment)
+        case 'float': return new XFloat(value.value, environment)
+        case 'optional': return new XOptional(environment, this.fromJs(value.value))
+      }
+    }
+
+    throw new TypeError('Incompatible value')
+  },
+
+  toJs (value: TypedValue): any {
+    if (
+      value instanceof XInteger ||
+      value instanceof XFloat ||
+      value instanceof XString ||
+      value instanceof XBoolean ||
+      value instanceof XOptional
+    ) {
+      return value.__value
+    }
+
+    if (value instanceof XArray) {
+      return value.__value.map(this.toJs)
+    }
+
+    if (value instanceof XSet) {
+      return new Set(Array.from(value.__value.values()).map(this.toJs))
+    }
+
+    if (value instanceof XMap) {
+      return Array.from(value.__value.entries()).reduce((map, [key, val]) => {
+        map.set(this.toJs(value.__keys.get(key) as TypedValue), this.toJs(val))
+        return map
+      }, new Map())
+    }
+
+    throw new TypeError(`Conversion not supported for ${value.kind}`)
+  }
+}
