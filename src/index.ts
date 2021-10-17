@@ -102,18 +102,22 @@ export default {
       value instanceof XInteger ||
       value instanceof XFloat ||
       value instanceof XString ||
-      value instanceof XBoolean ||
-      value instanceof XOptional
+      value instanceof XBoolean
     ) {
       return value.__value
     }
 
+    if (value instanceof XOptional) {
+      if (value.__value === undefined) return undefined
+      return this.toJs(value.__value)
+    }
+
     if (value instanceof XArray) {
-      return value.__value.map(this.toJs)
+      return value.__value.map(v => this.toJs(v))
     }
 
     if (value instanceof XSet) {
-      return new Set(Array.from(value.__value.values()).map(this.toJs))
+      return new Set(Array.from(value.__value.values()).map(v => this.toJs(v)))
     }
 
     if (value instanceof XMap) {
