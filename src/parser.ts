@@ -21,7 +21,8 @@ import {
   let_,
   map,
   optional,
-  index
+  index,
+  record
 } from './ast'
 import { Environment } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
@@ -289,7 +290,23 @@ export default class Parser {
     }
 
     if (this.#match(TokenKind.Identifier)) {
-      return identifier(this.#previous())
+      const token = this.#previous()
+      if (this.#match(TokenKind.LeftBrace)) {
+        const members: Array<[Identifier, Expression]> = []
+        while (!this.#match(TokenKind.RightBrace)) {
+          const name = this.#primary()
+          if (name.kind !== 'identifier') {
+            throw new SyntaxError()
+          }
+          this.#match(TokenKind.Colon) // skip optional colon
+          const value = this.#expression()
+          this.#match(TokenKind.Comma) // skip optional comma
+          members.push([name, value])
+        }
+        return record(token, members)
+      } else {
+        return identifier(token)
+      }
     }
 
     if (this.#match(TokenKind.LeftParen)) {

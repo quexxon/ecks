@@ -13,6 +13,7 @@ import {
   MethodCall,
   Optional,
   Primitive,
+  RecordGroup,
   SetGroup,
   Ternary,
   TypedValue,
@@ -26,15 +27,21 @@ import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
 import XTemplateString from './std/templateString'
-import { Environment } from './types'
+import { Environment, Records } from './types'
 
 export default class Interpreter {
   #expression: Expression
   #environment: Environment
+  #records: Records
 
-  constructor (expression: Expression, environment: Environment = new Map()) {
+  constructor (
+    expression: Expression,
+    environment: Environment = new Map(),
+    records: Records = new Map()
+  ) {
     this.#expression = expression
     this.#environment = environment
+    this.#records = records
   }
 
   eval (): TypedValue {
@@ -54,6 +61,7 @@ export default class Interpreter {
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
       case 'map': return this.#map(expression)
+      case 'record': return this.#record(expression)
       case 'method-call': return this.#methodCall(expression)
       case 'index': return this.#index(expression)
       case 'lambda': return this.#lambda(expression)
@@ -204,6 +212,22 @@ export default class Interpreter {
   #map (map: MapGroup): TypedValue {
     return new XMap(
       map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
+      this.#environment
+    )
+  }
+
+  #record (record: RecordGroup): TypedValue {
+    const RecordType = this.#records.get(record.name)
+
+    if (RecordType === undefined) {
+      throw new TypeError(`No registered record named '${record.name}'`)
+    }
+
+    return new RecordType(
+      record.members.reduce<Map<string, TypedValue>>((members, [id, expr]) => {
+        members.set(id.name, this.#evaluate(expr))
+        return members
+      }, new Map()),
       this.#environment
     )
   }

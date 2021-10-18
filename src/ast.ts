@@ -5,6 +5,7 @@ import XInteger from './std/integer'
 import XLambda from './std/lambda'
 import XMap from './std/map'
 import XOptional from './std/optional'
+import XRecord from './std/record'
 import XSet from './std/set'
 import XString from './std/string'
 import XTemplateString from './std/templateString'
@@ -84,6 +85,7 @@ export type TypedValue
   | XMap
   | XLambda
   | XOptional
+  | XRecord
 
 export interface Primitive {
   kind: 'primitive'
@@ -156,6 +158,13 @@ export interface MapGroup {
   offset: number
 }
 
+export interface RecordGroup {
+  kind: 'record'
+  name: string
+  members: Array<[Identifier, Expression]>
+  offset: number
+}
+
 export interface MethodCall {
   kind: 'method-call'
   receiver: Expression
@@ -202,6 +211,7 @@ export type Expression
   | ArrayGroup
   | SetGroup
   | MapGroup
+  | RecordGroup
   | MethodCall
   | Index
   | Lambda
@@ -315,6 +325,13 @@ export function map (elements: Array<[Expression, Expression]>, offset: number):
   return { kind: 'map', elements, offset }
 }
 
+export function record (
+  token: Token,
+  members: Array<[Identifier, Expression]>
+): RecordGroup {
+  return { kind: 'record', name: token.lexeme, members, offset: token.offset }
+}
+
 export function optional (offset: number, value?: Expression): Optional {
   return { kind: 'optional', value, offset }
 }
@@ -403,6 +420,12 @@ export function toString (expr: Expression): string {
         return `${toString(k)}: ${toString(v)}`
       }).join(', ')
       return `{${entries}}`
+    }
+    case 'record': {
+      const members = expr.members.map(([name, value]) => {
+        return `${toString(name)}: ${toString(value)}`
+      }).join(', ')
+      return `${expr.name} {${members}}`
     }
     case 'method-call': {
       const args = expr.arguments.length === 0

@@ -1,4 +1,5 @@
 import { TypedValue } from './ast'
+import XRecord from './std/record'
 
 export interface MethodType {
   arguments: PrimitiveType[]
@@ -28,3 +29,5 @@ export const Type: Record<string, PrimitiveType> = {
 }
 
 export type Environment = Map<string, TypedValue>
+
+export type Records = Map<string, new (value: Map<string, TypedValue>, environment: Environment) => XRecord>

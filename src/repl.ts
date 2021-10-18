@@ -11,6 +11,46 @@ import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
 import XString from './std/string'
+import XRecord from './std/record'
+import { Environment, Records } from './types'
+
+// Example record
+class Point extends XRecord {
+  #x: XInteger | XFloat
+  #y: XInteger | XFloat
+
+  constructor (value: Map<string, TypedValue>, environment: Environment) {
+    super(value, environment)
+
+    const x = value.get('x')
+    if (x === undefined || !(x instanceof XInteger || x instanceof XFloat)) {
+      throw new TypeError()
+    }
+
+    const y = value.get('y')
+    if (y === undefined || !(y instanceof XInteger || y instanceof XFloat)) {
+      throw new TypeError()
+    }
+
+    if (value.size > 2) throw new TypeError()
+
+    if (x.kind !== y.kind) throw new TypeError()
+
+    this.#x = x
+    this.#y = y
+  }
+
+  __new (value: Map<string, TypedValue>): Point {
+    return new Point(value, this.environment)
+  }
+
+  x (): XInteger | XFloat { return this.#x }
+  y (): XInteger | XFloat { return this.#y }
+
+  str (): XString {
+    return new XString(this.__toString(), this.environment)
+  }
+}
 
 function prettyPrint (value: TypedValue): string {
   if (value instanceof XString) {
@@ -79,8 +119,10 @@ rl.on('line', (line) => {
   }
 
   try {
+    const environment: Environment = new Map()
+    const records: Records = new Map([['point', Point]])
     const start = process.hrtime.bigint()
-    const value = Ecks.eval(input)
+    const value = Ecks.eval(input, environment, records)
     const duration = process.hrtime.bigint() - start
 
     console.log(`${prettyPrint(value)} :: ${value.kind}`)

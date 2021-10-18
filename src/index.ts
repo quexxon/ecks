@@ -1,4 +1,4 @@
-import { Environment } from './types'
+import { Environment, Records } from './types'
 import { TypedValue } from './ast'
 import Interpreter from './interpreter'
 import Parser from './parser'
@@ -44,10 +44,14 @@ function isTypeHint (value: unknown): value is TypeHint {
 }
 
 export default {
-  eval (source: string, environment: Environment = new Map()): TypedValue {
+  eval (
+    source: string,
+    environment: Environment = new Map(),
+    records: Records = new Map()
+  ): TypedValue {
     const scanner = new Scanner(source)
     const parser = new Parser(scanner.scan(), environment)
-    const interpreter = new Interpreter(parser.parse(), environment)
+    const interpreter = new Interpreter(parser.parse(), environment, records)
     return interpreter.eval()
   },
 
