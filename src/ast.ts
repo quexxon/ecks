@@ -29,8 +29,8 @@ export enum BinaryOperator {
   LessThanOrEqual = '<=',
   GreaterThan = '>',
   GreaterThanOrEqual = '>=',
-  Or = '|',
-  And = '&',
+  Or = 'or',
+  And = 'and',
   Optional = '??',
 }
 
