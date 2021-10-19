@@ -96,16 +96,16 @@ export default {
     }
 
     if (Array.isArray(value)) {
-      return new XArray(value.map(v => this.fromJs(v, environment)), environment)
+      return new XArray(value.map(v => this.fromJs(v, environment, records)), environment)
     }
 
     if (value instanceof Set) {
-      return new XSet(Array.from(value).map(v => this.fromJs(v, environment)), environment)
+      return new XSet(Array.from(value).map(v => this.fromJs(v, environment, records)), environment)
     }
 
     if (value instanceof Map) {
       return new XMap(Array.from(value.entries()).map(([k, v]) => {
-        return [this.fromJs(k, environment), this.fromJs(v, environment)]
+        return [this.fromJs(k, environment, records), this.fromJs(v, environment, records)]
       }), environment)
     }
 
@@ -113,7 +113,7 @@ export default {
       switch (value.kind) {
         case 'integer': return new XInteger(value.value, environment)
         case 'float': return new XFloat(value.value, environment)
-        case 'optional': return new XOptional(environment, this.fromJs(value.value))
+        case 'optional': return new XOptional(environment, this.fromJs(value.value, environment, records))
         case 'record': {
           const RecordType = records.get(value.name)
           if (RecordType === undefined) {
@@ -121,12 +121,12 @@ export default {
           }
           const members: Map<string, TypedValue> = new Map()
           for (const [k, v] of Object.entries(value.value)) {
-            members.set(k, this.fromJs(v))
+            members.set(k, this.fromJs(v, environment, records))
           }
           return new RecordType(members, environment)
         }
         case 'tuple': return new XTuple(
-          value.value.map(v => this.fromJs(v, environment)),
+          value.value.map(v => this.fromJs(v, environment, records)),
           environment
         )
       }
