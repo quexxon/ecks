@@ -9,6 +9,7 @@ import XRecord from './std/record'
 import XSet from './std/set'
 import XString from './std/string'
 import XTemplateString from './std/templateString'
+import XTuple from './std/tuple'
 import Token, { TokenKind } from './token'
 import { Environment } from './types'
 
@@ -82,6 +83,7 @@ export type TypedValue
   | XTemplateString
   | XArray
   | XSet
+  | XTuple
   | XMap
   | XLambda
   | XOptional
@@ -152,6 +154,12 @@ export interface SetGroup {
   offset: number
 }
 
+export interface TupleGroup {
+  kind: 'tuple'
+  elements: Expression[]
+  offset: number
+}
+
 export interface MapGroup {
   kind: 'map'
   elements: Array<[Expression, Expression]>
@@ -210,6 +218,7 @@ export type Expression
   | Grouping
   | ArrayGroup
   | SetGroup
+  | TupleGroup
   | MapGroup
   | RecordGroup
   | MethodCall
@@ -321,6 +330,10 @@ export function set (elements: Expression[], offset: number): SetGroup {
   return { kind: 'set', elements, offset }
 }
 
+export function tuple (elements: Expression[], offset: number): TupleGroup {
+  return { kind: 'tuple', elements, offset }
+}
+
 export function map (elements: Array<[Expression, Expression]>, offset: number): MapGroup {
   return { kind: 'map', elements, offset }
 }
@@ -415,6 +428,7 @@ export function toString (expr: Expression): string {
     case 'grouping': return `(${toString(expr.expression)})`
     case 'array': return `[${expr.elements.map(toString).join(' ')}]`
     case 'set': return `$[${expr.elements.map(toString).join(' ')}]`
+    case 'tuple': return `@[${expr.elements.map(toString).join(' ')}]`
     case 'map': {
       const entries = expr.elements.map(([k, v]) => {
         return `${toString(k)}: ${toString(v)}`

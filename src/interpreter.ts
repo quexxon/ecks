@@ -16,6 +16,7 @@ import {
   RecordGroup,
   SetGroup,
   Ternary,
+  TupleGroup,
   TypedValue,
   Unary,
   UnaryOperator
@@ -27,6 +28,7 @@ import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
 import XTemplateString from './std/templateString'
+import XTuple from './std/tuple'
 import { Environment, Records } from './types'
 
 export default class Interpreter {
@@ -60,6 +62,7 @@ export default class Interpreter {
       case 'let': return this.#let(expression)
       case 'array': return this.#array(expression)
       case 'set': return this.#set(expression)
+      case 'tuple': return this.#tuple(expression)
       case 'map': return this.#map(expression)
       case 'record': return this.#record(expression)
       case 'method-call': return this.#methodCall(expression)
@@ -209,6 +212,10 @@ export default class Interpreter {
     return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
   }
 
+  #tuple (tuple: TupleGroup): TypedValue {
+    return new XTuple(tuple.elements.map(e => this.#evaluate(e)), this.#environment)
+  }
+
   #map (map: MapGroup): TypedValue {
     return new XMap(
       map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
@@ -254,6 +261,10 @@ export default class Interpreter {
 
     if (receiver instanceof XMap) {
       return receiver.get(this.#evaluate(index.index))
+    }
+
+    if (receiver instanceof XTuple) {
+      return receiver.at(this.#evaluate(index.index))
     }
 
     throw new TypeError(`Index expressions are not supported for ${receiver.kind}`)

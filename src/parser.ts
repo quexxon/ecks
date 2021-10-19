@@ -22,7 +22,8 @@ import {
   map,
   optional,
   index,
-  record
+  record,
+  tuple
 } from './ast'
 import { Environment } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
@@ -344,6 +345,19 @@ export default class Parser {
         }
       }
       return set(elements, offset)
+    }
+
+    if (this.#match(TokenKind.TupleBracket)) {
+      const offset = this.#previous().offset
+      const elements = []
+      while (!this.#match(TokenKind.RightBracket)) {
+        elements.push(this.#expression())
+        this.#match(TokenKind.Comma) // Skip commas
+        if (this.#isAtEnd()) {
+          throw new UnmatchedOpeningChar('Expected closing `]` after expression')
+        }
+      }
+      return tuple(elements, offset)
     }
 
     if (this.#match(TokenKind.LeftBrace)) {
