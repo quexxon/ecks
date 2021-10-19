@@ -3,15 +3,13 @@ import { Environment } from '../types'
 
 export default abstract class XRecord {
   kind = 'record'
-  protected readonly value: Map<string, TypedValue>
-  protected readonly environment: Environment
+  readonly __value: Map<string, TypedValue>
+  protected readonly __environment: Environment
 
   constructor (value: Map<string, TypedValue>, environment: Environment) {
-    this.value = value
-    this.environment = environment
+    this.__value = value
+    this.__environment = environment
   }
-
-  get __value (): Map<string, TypedValue> { return this.value }
 
   abstract __new (value: Map<string, TypedValue>): XRecord
 

@@ -42,14 +42,14 @@ class Point extends XRecord {
   }
 
   __new (value: Map<string, TypedValue>): Point {
-    return new Point(value, this.environment)
+    return new Point(value, this.__environment)
   }
 
   x (): XInteger | XFloat { return this.#x }
   y (): XInteger | XFloat { return this.#y }
 
   str (): XString {
-    return new XString(this.__toString(), this.environment)
+    return new XString(this.__toString(), this.__environment)
   }
 }
 
