@@ -20,6 +20,6 @@ export default abstract class XRecord {
       return `${name}: ${value.__toString()}`
     }).join(', ')
 
-    return `point {${members}}`
+    return `${(this as object).constructor.name.toLowerCase()} {${members}}`
   }
 }
