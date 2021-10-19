@@ -12,6 +12,7 @@ import XSet from './std/set'
 import XString from './std/string'
 import XMap from './std/map'
 import XRecord from './std/record'
+import XTuple from './std/tuple'
 
 interface IntegerHint {
   kind: 'integer'
@@ -34,11 +35,17 @@ interface RecordHint {
   value: Record<string, unknown>
 }
 
+interface TupleHint {
+  kind: 'tuple'
+  value: unknown[]
+}
+
 type TypeHint
   = IntegerHint
   | FloatHint
   | OptionalHint
   | RecordHint
+  | TupleHint
 
 function isTypeHint (value: unknown): value is TypeHint {
   if (typeof value !== 'object' || value === null) return false
@@ -47,7 +54,7 @@ function isTypeHint (value: unknown): value is TypeHint {
 
   return (
     typeof kind === 'string' &&
-    ['integer', 'float', 'optional', 'record'].includes(kind)
+    ['integer', 'float', 'optional', 'record', 'tuple'].includes(kind)
   )
 }
 
@@ -118,6 +125,10 @@ export default {
           }
           return new RecordType(members, environment)
         }
+        case 'tuple': return new XTuple(
+          value.value.map(v => this.fromJs(v, environment)),
+          environment
+        )
       }
     }
 
@@ -145,6 +156,10 @@ export default {
 
     if (value instanceof XSet) {
       return new Set(Array.from(value.__value.values()).map(v => this.toJs(v)))
+    }
+
+    if (value instanceof XTuple) {
+      return value.__value.map(v => this.toJs(v))
     }
 
     if (value instanceof XMap) {
