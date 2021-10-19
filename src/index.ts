@@ -1,4 +1,4 @@
-import { Environment, Records } from './types'
+import { State } from './types'
 import { TypedValue } from './ast'
 import Interpreter from './interpreter'
 import Parser from './parser'
@@ -58,76 +58,76 @@ function isTypeHint (value: unknown): value is TypeHint {
   )
 }
 
+const defaultState: State = {
+  environment: new Map(),
+  records: new Map()
+}
+
 export default {
-  eval (
-    source: string,
-    environment: Environment = new Map(),
-    records: Records = new Map()
-  ): TypedValue {
-    const scanner = new Scanner(source)
-    const parser = new Parser(scanner.scan(), environment)
-    const interpreter = new Interpreter(parser.parse(), environment, records)
+  eval (source: string, state: State = defaultState): TypedValue {
+    const scanner = new Scanner(source, state)
+    const parser = new Parser(scanner.scan(), state)
+    const interpreter = new Interpreter(parser.parse(), state)
     return interpreter.eval()
   },
 
   fromJs (
     value: unknown,
-    environment: Environment = new Map(),
-    records: Records = new Map()
+    state: State = defaultState
   ): TypedValue {
     if (typeof value === 'number') {
       if (Math.trunc(value) === value) {
-        return new XInteger(value, environment)
+        return new XInteger(value, state)
       } else {
-        return new XFloat(value, environment)
+        return new XFloat(value, state)
       }
     }
 
     if (typeof value === 'boolean') {
-      return new XBoolean(value, environment)
+      return new XBoolean(value, state)
     }
 
     if (typeof value === 'string') {
-      return new XString(value, environment)
+      return new XString(value, state)
     }
 
     if (typeof value === 'undefined') {
-      return new XOptional(environment)
+      return new XOptional(state)
     }
 
     if (Array.isArray(value)) {
-      return new XArray(value.map(v => this.fromJs(v, environment, records)), environment)
+      return new XArray(value.map(v => this.fromJs(v, state)), state)
     }
 
     if (value instanceof Set) {
-      return new XSet(Array.from(value).map(v => this.fromJs(v, environment, records)), environment)
+      return new XSet(Array.from(value).map(v => this.fromJs(v, state)), state)
     }
 
     if (value instanceof Map) {
       return new XMap(Array.from(value.entries()).map(([k, v]) => {
-        return [this.fromJs(k, environment, records), this.fromJs(v, environment, records)]
-      }), environment)
+        return [this.fromJs(k, state), this.fromJs(v, state)]
+      }), state)
     }
 
     if (isTypeHint(value)) {
       switch (value.kind) {
-        case 'integer': return new XInteger(value.value, environment)
-        case 'float': return new XFloat(value.value, environment)
-        case 'optional': return new XOptional(environment, this.fromJs(value.value, environment, records))
+        case 'integer': return new XInteger(value.value, state)
+        case 'float': return new XFloat(value.value, state)
+        case 'optional': return new XOptional(state, this.fromJs(value.value, state))
         case 'record': {
-          const RecordType = records.get(value.name)
+          const RecordType = state.records.get(value.name)
           if (RecordType === undefined) {
             throw new Error(`No registered record named "${value.name}`)
           }
           const members: Map<string, TypedValue> = new Map()
           for (const [k, v] of Object.entries(value.value)) {
-            members.set(k, this.fromJs(v, environment, records))
+            members.set(k, this.fromJs(v, state))
           }
-          return new RecordType(members, environment)
+          return new RecordType(members, state)
         }
         case 'tuple': return new XTuple(
-          value.value.map(v => this.fromJs(v, environment, records)),
-          environment
+          value.value.map(v => this.fromJs(v, state)),
+          state
         )
       }
     }

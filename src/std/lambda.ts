@@ -1,6 +1,6 @@
 import { Expression, Identifier, toString, TypedValue } from '../ast'
 import Interpreter from '../interpreter'
-import { Environment } from '../types'
+import { State } from '../types'
 import XArray from './array'
 
 interface Lambda {
@@ -11,11 +11,11 @@ interface Lambda {
 export default class XLambda {
   kind = 'lambda'
   #value: Lambda
-  #environment: Environment
+  #state: State
 
-  constructor (value: Lambda, environment: Environment) {
+  constructor (value: Lambda, state: State) {
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
   apply (args: XArray): TypedValue {
@@ -27,14 +27,17 @@ export default class XLambda {
       throw new Error(`Expected ${this.#value.params.length} arguments`)
     }
 
-    const newEnvironment: Environment = new Map(this.#environment)
+    const state: State = {
+      ...this.#state,
+      environment: new Map(this.#state.environment)
+    }
     for (let i = 0; i < args.length; i++) {
       const name = this.#value.params[i].name
       const value = args[i]
-      newEnvironment.set(name, value)
+      state.environment.set(name, value)
     }
 
-    const interpreter = new Interpreter(this.#value.body, newEnvironment)
+    const interpreter = new Interpreter(this.#value.body, state)
     return interpreter.eval()
   }
 

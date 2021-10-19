@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XString from './string'
@@ -11,15 +11,15 @@ function isNumber (value: unknown): value is XInteger | XFloat {
 export default class XFloat {
   kind = 'float'
   #value: number
-  #environment: Environment
+  #state: State
 
-  constructor (value: number, environment: Environment) {
+  constructor (value: number, state: State) {
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
   int (): XInteger {
-    return new XInteger(this.#value, this.#environment)
+    return new XInteger(this.#value, this.#state)
   }
 
   clamp (x: XInteger | XFloat, y: XInteger | XFloat): XFloat {
@@ -29,7 +29,7 @@ export default class XFloat {
   }
 
   str (): XString {
-    return new XString(this.__toString(), this.#environment)
+    return new XString(this.__toString(), this.#state)
   }
 
   [Symbol.for('neg')] (): XFloat {
@@ -58,38 +58,38 @@ export default class XFloat {
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value === value.__value, this.#environment)
+    return new XBoolean(this.#value === value.__value, this.#state)
   }
 
   [Symbol.for('!=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value !== value.__value, this.#environment)
+    return new XBoolean(this.#value !== value.__value, this.#state)
   }
 
   [Symbol.for('<')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value < value.__value, this.#environment)
+    return new XBoolean(this.#value < value.__value, this.#state)
   }
 
   [Symbol.for('<=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value <= value.__value, this.#environment)
+    return new XBoolean(this.#value <= value.__value, this.#state)
   }
 
   [Symbol.for('>')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value > value.__value, this.#environment)
+    return new XBoolean(this.#value > value.__value, this.#state)
   }
 
   [Symbol.for('>=')] (value: TypedValue): XBoolean {
     if (!isNumber(value)) throw new TypeError()
-    return new XBoolean(this.#value >= value.__value, this.#environment)
+    return new XBoolean(this.#value >= value.__value, this.#state)
   }
 
   get __value (): number { return this.#value }
 
   __new (value: number): XFloat {
-    return new XFloat(value, this.#environment)
+    return new XFloat(value, this.#state)
   }
 
   __toString (): string {

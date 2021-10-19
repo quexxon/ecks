@@ -1,13 +1,13 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 
 export default class XOptional {
   kind = 'optional'
   #value?: TypedValue
-  #environment: Environment
+  #state: State
 
-  constructor (environment: Environment, value?: TypedValue) {
-    this.#environment = environment
+  constructor (state: State, value?: TypedValue) {
+    this.#state = state
     this.#value = value
   }
 
@@ -18,7 +18,7 @@ export default class XOptional {
   get __value (): TypedValue | undefined { return this.#value }
 
   __new (value?: TypedValue): XOptional {
-    return new XOptional(this.#environment, value)
+    return new XOptional(this.#state, value)
   }
 
   __toString (): string {

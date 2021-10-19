@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
@@ -7,9 +7,9 @@ import XLambda from './lambda'
 export default class XSet {
   kind = 'set'
   #value: Map<string, TypedValue>
-  #environment: Environment
+  #state: State
 
-  constructor (value: TypedValue[], environment: Environment) {
+  constructor (value: TypedValue[], state: State) {
     if (value.length > 1) {
       const first = value[0]
       if (!value.every(x => x.kind === first.kind)) {
@@ -17,7 +17,7 @@ export default class XSet {
       }
     }
     this.#value = new Map(value.map(v => [v.__toString(), v]))
-    this.#environment = environment
+    this.#state = state
   }
 
   has (value: TypedValue): XBoolean {
@@ -25,11 +25,11 @@ export default class XSet {
       throw new TypeError()
     }
 
-    return new XBoolean(this.#value.has(value.__toString()), this.#environment)
+    return new XBoolean(this.#value.has(value.__toString()), this.#state)
   }
 
   len (): XInteger {
-    return new XInteger(this.__length, this.#environment)
+    return new XInteger(this.__length, this.#state)
   }
 
   union (value: TypedValue): XSet {
@@ -57,7 +57,7 @@ export default class XSet {
   }
 
   __new (value: TypedValue[]): XSet {
-    return new XSet(value, this.#environment)
+    return new XSet(value, this.#state)
   }
 
   __toString (): string {

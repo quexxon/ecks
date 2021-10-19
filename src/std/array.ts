@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
@@ -8,9 +8,9 @@ import XOptional from './optional'
 export default class XArray {
   kind = 'array'
   #value: TypedValue[]
-  #environment: Environment
+  #state: State
 
-  constructor (value: TypedValue[], environment: Environment) {
+  constructor (value: TypedValue[], state: State) {
     if (value.length > 1) {
       const first = value[0]
       if (!value.every(x => x.kind === first.kind)) {
@@ -18,7 +18,7 @@ export default class XArray {
       }
     }
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
   at (index: TypedValue): XOptional {
@@ -26,11 +26,11 @@ export default class XArray {
     const value = (index.__value >= 0 && index.__value < this.#value.length)
       ? this.#value[index.__value]
       : undefined
-    return new XOptional(this.#environment, value)
+    return new XOptional(this.#state, value)
   }
 
   len (): XInteger {
-    return new XInteger(this.#value.length, this.#environment)
+    return new XInteger(this.#value.length, this.#state)
   }
 
   map (lambda: XLambda): XArray {
@@ -80,7 +80,7 @@ export default class XArray {
   }
 
   __new (value: TypedValue[]): XArray {
-    return new XArray(value, this.#environment)
+    return new XArray(value, this.#state)
   }
 
   __toString (): string {

@@ -1,14 +1,14 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 
 export default abstract class XRecord {
   kind = 'record'
   readonly __value: Map<string, TypedValue>
-  protected readonly __environment: Environment
+  protected readonly __state: State
 
-  constructor (value: Map<string, TypedValue>, environment: Environment) {
+  constructor (value: Map<string, TypedValue>, state: State) {
     this.__value = value
-    this.__environment = environment
+    this.__state = state
   }
 
   abstract __new (value: Map<string, TypedValue>): XRecord

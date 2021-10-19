@@ -28,6 +28,11 @@ export const Type: Record<string, PrimitiveType> = {
   float: { kind: 'float' }
 }
 
+export interface State {
+  environment: Environment
+  records: Records
+}
+
 export type Environment = Map<string, TypedValue>
 
-export type Records = Map<string, new (value: Map<string, TypedValue>, environment: Environment) => XRecord>
+export type Records = Map<string, new (value: Map<string, TypedValue>, state: State) => XRecord>

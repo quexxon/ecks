@@ -25,17 +25,17 @@ import {
   record,
   tuple
 } from './ast'
-import { Environment } from './types'
+import { State } from './types'
 import { UnexpectedEof, UnmatchedOpeningChar } from './error'
 
 export default class Parser {
   #tokens: Token[]
-  #environment: Environment
+  #state: State
   #current: number = 0
 
-  constructor (tokens: Token[], environment: Environment = new Map()) {
+  constructor (tokens: Token[], state: State) {
     this.#tokens = tokens
-    this.#environment = environment
+    this.#state = state
   }
 
   parse (): Expression {
@@ -47,7 +47,7 @@ export default class Parser {
   }
 
   #ternary (): Expression {
-    const expression: Expression = this.#equality()
+    const expression: Expression = this.#boolean()
 
     if (this.#match(TokenKind.Question)) {
       const consequent = this.#ternary()
@@ -59,20 +59,20 @@ export default class Parser {
     return expression
   }
 
-  #equality (): Expression {
-    let expression: Expression = this.#boolean()
+  #boolean (): Expression {
+    let expression: Expression = this.#equality()
 
-    while (this.#match(TokenKind.Equal, TokenKind.BangEqual)) {
-      expression = binary(expression, this.#previous(), this.#boolean())
+    while (this.#match(TokenKind.And, TokenKind.Or)) {
+      expression = binary(expression, this.#previous(), this.#equality())
     }
 
     return expression
   }
 
-  #boolean (): Expression {
+  #equality (): Expression {
     let expression: Expression = this.#comparison()
 
-    while (this.#match(TokenKind.And, TokenKind.Or)) {
+    while (this.#match(TokenKind.Equal, TokenKind.BangEqual)) {
       expression = binary(expression, this.#previous(), this.#comparison())
     }
 
@@ -135,7 +135,7 @@ export default class Parser {
     const offset = this.#previous().offset
 
     if (this.#match(TokenKind.Integer)) {
-      const indexExpression = integer(this.#previous(), this.#environment)
+      const indexExpression = integer(this.#previous(), this.#state)
       return index(expression, indexExpression, offset)
     }
 
@@ -255,24 +255,24 @@ export default class Parser {
 
   #primary (): Expression {
     if (this.#match(TokenKind.False)) {
-      return boolean(this.#previous(), this.#environment)
+      return boolean(this.#previous(), this.#state)
     }
     if (this.#match(TokenKind.True)) {
-      return boolean(this.#previous(), this.#environment)
+      return boolean(this.#previous(), this.#state)
     }
 
     if (this.#match(TokenKind.Integer)) {
-      return integer(this.#previous(), this.#environment)
+      return integer(this.#previous(), this.#state)
     }
     if (this.#match(TokenKind.Float)) {
-      return float(this.#previous(), this.#environment)
+      return float(this.#previous(), this.#state)
     }
 
     if (this.#match(TokenKind.String)) {
-      return string(this.#previous(), this.#environment)
+      return string(this.#previous(), this.#state)
     }
     if (this.#match(TokenKind.TemplateString)) {
-      return templateString(this.#previous(), this.#environment)
+      return templateString(this.#previous(), this.#state)
     }
 
     if (this.#match(TokenKind.None)) {
@@ -389,6 +389,10 @@ export default class Parser {
       }
       const body = this.#expression()
       return lambda(parameters, body, offset)
+    }
+
+    if (this.#isAtEnd()) {
+      throw new UnexpectedEof()
     }
 
     throw new SyntaxError('WHOOPS!')

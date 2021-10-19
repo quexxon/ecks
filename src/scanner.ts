@@ -1,13 +1,16 @@
 import Token, { TokenKind } from './token'
+import { State } from './types'
 
 export default class Scanner {
   #source: string
+  #state: State
   #tokens: Token[] = []
   #start: number = 0
   #current: number = 0
 
-  constructor (source: string) {
+  constructor (source: string, state: State) {
     this.#source = source
+    this.#state = state
   }
 
   scan (): Token[] {

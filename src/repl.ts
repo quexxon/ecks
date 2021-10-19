@@ -12,7 +12,7 @@ import XOptional from './std/optional'
 import XSet from './std/set'
 import XString from './std/string'
 import XRecord from './std/record'
-import { Environment, Records } from './types'
+import { Environment, Records, State } from './types'
 import XTuple from './std/tuple'
 
 // Example record
@@ -20,8 +20,8 @@ class Point extends XRecord {
   #x: XInteger | XFloat
   #y: XInteger | XFloat
 
-  constructor (value: Map<string, TypedValue>, environment: Environment) {
-    super(value, environment)
+  constructor (value: Map<string, TypedValue>, state: State) {
+    super(value, state)
 
     const x = value.get('x')
     if (x === undefined || !(x instanceof XInteger || x instanceof XFloat)) {
@@ -42,14 +42,14 @@ class Point extends XRecord {
   }
 
   __new (value: Map<string, TypedValue>): Point {
-    return new Point(value, this.__environment)
+    return new Point(value, this.__state)
   }
 
   x (): XInteger | XFloat { return this.#x }
   y (): XInteger | XFloat { return this.#y }
 
   str (): XString {
-    return new XString(this.__toString(), this.__environment)
+    return new XString(this.__toString(), this.__state)
   }
 }
 
@@ -134,7 +134,7 @@ rl.on('line', (line) => {
     const environment: Environment = new Map()
     const records: Records = new Map([['point', Point]])
     const start = process.hrtime.bigint()
-    const value = Ecks.eval(input, environment, records)
+    const value = Ecks.eval(input, { environment, records })
     const duration = process.hrtime.bigint() - start
 
     console.log(`${prettyPrint(value)} :: ${value.kind}`)
@@ -147,6 +147,7 @@ rl.on('line', (line) => {
       rl.prompt()
       return
     } else if (err instanceof Error) {
+      console.log(err)
       console.log(`${err.name}: ${err.message}`)
     } else {
       throw new Error('Unexpected Error')

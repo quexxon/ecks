@@ -29,21 +29,15 @@ import XOptional from './std/optional'
 import XSet from './std/set'
 import XTemplateString from './std/templateString'
 import XTuple from './std/tuple'
-import { Environment, Records } from './types'
+import { State } from './types'
 
 export default class Interpreter {
   #expression: Expression
-  #environment: Environment
-  #records: Records
+  #state: State
 
-  constructor (
-    expression: Expression,
-    environment: Environment = new Map(),
-    records: Records = new Map()
-  ) {
+  constructor (expression: Expression, state: State) {
     this.#expression = expression
-    this.#environment = environment
-    this.#records = records
+    this.#state = state
   }
 
   eval (): TypedValue {
@@ -76,7 +70,7 @@ export default class Interpreter {
   #primitive (primitive: Primitive): TypedValue {
     return (
       primitive.value instanceof XTemplateString
-        ? primitive.value.evaluate(this.#environment)
+        ? primitive.value.evaluate(this.#state)
         : primitive.value
     )
   }
@@ -149,7 +143,7 @@ export default class Interpreter {
     }
 
     if (cond.else === undefined) {
-      return new XOptional(this.#environment, result)
+      return new XOptional(this.#state, result)
     }
 
     if (result === undefined) {
@@ -183,7 +177,7 @@ export default class Interpreter {
     }
 
     if (case_.else === undefined) {
-      return new XOptional(this.#environment, result)
+      return new XOptional(this.#state, result)
     }
 
     if (result === undefined) {
@@ -194,37 +188,40 @@ export default class Interpreter {
   }
 
   #let (let_: Let): TypedValue {
-    const environment = new Map(this.#environment)
-    for (const [name, expression] of let_.bindings) {
-      const interpreter = new Interpreter(expression, environment)
-      const value = interpreter.eval()
-      environment.set(name.name, value)
+    const state: State = {
+      environment: new Map(this.#state.environment),
+      records: new Map(this.#state.records)
     }
-    const interpreter = new Interpreter(let_.body, environment)
+    for (const [name, expression] of let_.bindings) {
+      const interpreter = new Interpreter(expression, state)
+      const value = interpreter.eval()
+      state.environment.set(name.name, value)
+    }
+    const interpreter = new Interpreter(let_.body, state)
     return interpreter.eval()
   }
 
   #array (array: ArrayGroup): TypedValue {
-    return new XArray(array.elements.map(e => this.#evaluate(e)), this.#environment)
+    return new XArray(array.elements.map(e => this.#evaluate(e)), this.#state)
   }
 
   #set (set: SetGroup): TypedValue {
-    return new XSet(set.elements.map(e => this.#evaluate(e)), this.#environment)
+    return new XSet(set.elements.map(e => this.#evaluate(e)), this.#state)
   }
 
   #tuple (tuple: TupleGroup): TypedValue {
-    return new XTuple(tuple.elements.map(e => this.#evaluate(e)), this.#environment)
+    return new XTuple(tuple.elements.map(e => this.#evaluate(e)), this.#state)
   }
 
   #map (map: MapGroup): TypedValue {
     return new XMap(
       map.elements.map(([k, v]) => [this.#evaluate(k), this.#evaluate(v)]),
-      this.#environment
+      this.#state
     )
   }
 
   #record (record: RecordGroup): TypedValue {
-    const RecordType = this.#records.get(record.name)
+    const RecordType = this.#state.records.get(record.name)
 
     if (RecordType === undefined) {
       throw new TypeError(`No registered record named '${record.name}'`)
@@ -235,7 +232,7 @@ export default class Interpreter {
         members.set(id.name, this.#evaluate(expr))
         return members
       }, new Map()),
-      this.#environment
+      this.#state
     )
   }
 
@@ -274,16 +271,16 @@ export default class Interpreter {
     return new XLambda({
       params: lambda.parameters,
       body: lambda.body
-    }, this.#environment)
+    }, this.#state)
   }
 
   #optional (optional: Optional): XOptional {
     const value = optional.value === undefined ? undefined : this.#evaluate(optional.value)
-    return new XOptional(this.#environment, value)
+    return new XOptional(this.#state, value)
   }
 
   #identifier (identifier: Identifier): TypedValue {
-    const value = this.#environment.get(identifier.name)
+    const value = this.#state.environment.get(identifier.name)
 
     if (value === undefined) {
       throw new TypeError(`Unrecognized identifier: ${identifier.name}`)

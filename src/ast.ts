@@ -11,7 +11,7 @@ import XString from './std/string'
 import XTemplateString from './std/templateString'
 import XTuple from './std/tuple'
 import Token, { TokenKind } from './token'
-import { Environment } from './types'
+import { State } from './types'
 
 export enum UnaryOperator {
   Negation = '-',
@@ -278,42 +278,42 @@ export function let_ (
   return { kind: 'let', bindings, body }
 }
 
-export function boolean (token: Token, environment: Environment): Primitive {
+export function boolean (token: Token, state: State): Primitive {
   return {
     kind: 'primitive',
-    value: new XBoolean(token.literal as boolean, environment),
+    value: new XBoolean(token.literal as boolean, state),
     offset: token.offset
   }
 }
 
-export function integer (token: Token, environment: Environment): Primitive {
+export function integer (token: Token, state: State): Primitive {
   return {
     kind: 'primitive',
-    value: new XInteger(token.literal as number, environment),
+    value: new XInteger(token.literal as number, state),
     offset: token.offset
   }
 }
 
-export function float (token: Token, environment: Environment): Primitive {
+export function float (token: Token, state: State): Primitive {
   return {
     kind: 'primitive',
-    value: new XFloat(token.literal as number, environment),
+    value: new XFloat(token.literal as number, state),
     offset: token.offset
   }
 }
 
-export function string (token: Token, environment: Environment): Primitive {
+export function string (token: Token, state: State): Primitive {
   return {
     kind: 'primitive',
-    value: new XString(token.literal as string, environment),
+    value: new XString(token.literal as string, state),
     offset: token.offset
   }
 }
 
-export function templateString (token: Token, environment: Environment): Primitive {
+export function templateString (token: Token, state: State): Primitive {
   return {
     kind: 'primitive',
-    value: new XTemplateString(token.literal as string, environment),
+    value: new XTemplateString(token.literal as string, state),
     offset: token.offset
   }
 }

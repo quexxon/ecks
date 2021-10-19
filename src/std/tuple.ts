@@ -1,15 +1,15 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XInteger from './integer'
 
 export default class XTuple {
   kind = 'tuple'
   #value: TypedValue[]
-  #environment: Environment
+  #state: State
 
-  constructor (value: TypedValue[], environment: Environment) {
+  constructor (value: TypedValue[], state: State) {
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
   at (index: TypedValue): TypedValue {
@@ -21,14 +21,14 @@ export default class XTuple {
   }
 
   len (): XInteger {
-    return new XInteger(this.__length, this.#environment)
+    return new XInteger(this.__length, this.#state)
   }
 
   get __value (): TypedValue[] { return this.#value }
   get __length (): number { return this.#value.length }
 
   __new (value: TypedValue[]): XTuple {
-    return new XTuple(value, this.#environment)
+    return new XTuple(value, this.#state)
   }
 
   __toString (): string {

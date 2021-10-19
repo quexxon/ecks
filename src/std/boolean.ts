@@ -1,19 +1,19 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XString from './string'
 
 export default class XBoolean {
   kind = 'boolean'
   #value: boolean
-  #environment: Environment
+  #state: State
 
-  constructor (value: boolean, environment: Environment) {
+  constructor (value: boolean, state: State) {
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
   str (): XString {
-    return new XString(this.__toString(), this.#environment)
+    return new XString(this.__toString(), this.#state)
   }
 
   [Symbol.for('!')] (): XBoolean {
@@ -43,7 +43,7 @@ export default class XBoolean {
   get __value (): boolean { return this.#value }
 
   __new (value: boolean): XBoolean {
-    return new XBoolean(value, this.#environment)
+    return new XBoolean(value, this.#state)
   }
 
   __toString (): string {

@@ -1,5 +1,5 @@
 import { TypedValue } from '../ast'
-import { Environment } from '../types'
+import { State } from '../types'
 import XBoolean from './boolean'
 import XInteger from './integer'
 
@@ -41,15 +41,15 @@ export default class XString {
 
   kind = 'string'
   #value: string
-  #environment: Environment
+  #state: State
 
-  constructor (value: string, environment: Environment) {
+  constructor (value: string, state: State) {
     this.#value = XString.#escapeString(value)
-    this.#environment = environment
+    this.#state = state
   }
 
   len (): XInteger {
-    return new XInteger(this.__length, this.#environment)
+    return new XInteger(this.__length, this.#state)
   }
 
   [Symbol.for('+')] (value: TypedValue): XString {
@@ -59,39 +59,39 @@ export default class XString {
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value === value.__value, this.#environment)
+    return new XBoolean(this.#value === value.__value, this.#state)
   }
 
   [Symbol.for('!=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value !== value.__value, this.#environment)
+    return new XBoolean(this.#value !== value.__value, this.#state)
   }
 
   [Symbol.for('<')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value < value.__value, this.#environment)
+    return new XBoolean(this.#value < value.__value, this.#state)
   }
 
   [Symbol.for('<=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value <= value.__value, this.#environment)
+    return new XBoolean(this.#value <= value.__value, this.#state)
   }
 
   [Symbol.for('>')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value > value.__value, this.#environment)
+    return new XBoolean(this.#value > value.__value, this.#state)
   }
 
   [Symbol.for('>=')] (value: TypedValue): XBoolean {
     if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value >= value.__value, this.#environment)
+    return new XBoolean(this.#value >= value.__value, this.#state)
   }
 
   get __value (): string { return this.#value }
   get __length (): number { return this.#value.length }
 
   __new (value: string): XString {
-    return new XString(value, this.#environment)
+    return new XString(value, this.#state)
   }
 
   __toString (): string {

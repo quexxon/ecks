@@ -1,20 +1,18 @@
-import Interpreter from '../interpreter'
-import Parser from '../parser'
-import Scanner from '../scanner'
-import { Environment } from '../types'
+import { State } from '../types'
 import XString from './string'
+import Ecks from '..'
 
 export default class XTemplateString {
   kind = 'template_string'
   #value: string
-  #environment: Environment
+  #state: State
 
-  constructor (value: string, environment: Environment) {
+  constructor (value: string, state: State) {
     this.#value = value
-    this.#environment = environment
+    this.#state = state
   }
 
-  evaluate (environment: Environment): XString {
+  evaluate (state: State): XString {
     const segments: string[] = []
 
     let depth = 0
@@ -47,10 +45,7 @@ export default class XTemplateString {
           segments.push(this.#value.slice(end, start))
           end = i + 1
           const expression = this.#value.slice(start + 1, i)
-          const scanner = new Scanner(expression)
-          const parser = new Parser(scanner.scan(), environment)
-          const interpreter = new Interpreter(parser.parse(), environment)
-          const value = interpreter.eval()
+          const value = Ecks.eval(expression, state)
           segments.push(value instanceof XString ? value.__value : value.__toString())
         }
       }
@@ -58,7 +53,7 @@ export default class XTemplateString {
 
     segments.push(this.#value.slice(end))
 
-    return new XString(segments.join(''), this.#environment)
+    return new XString(segments.join(''), this.#state)
   }
 
   get __value (): string { return this.#value }
