@@ -13,6 +13,7 @@ import XSet from './std/set'
 import XString from './std/string'
 import XRecord from './std/record'
 import { Environment, Records } from './types'
+import XTuple from './std/tuple'
 
 // Example record
 class Point extends XRecord {
@@ -85,11 +86,22 @@ function prettyPrint (value: TypedValue): string {
     return `$[${Array.from(value.__value.values()).map(prettyPrint).join(' ')}]`
   }
 
+  if (value instanceof XTuple) {
+    return `@[${value.__value.map(prettyPrint).join(' ')}]`
+  }
+
   if (value instanceof XMap) {
     const entries = Array.from(value.__value.entries()).map(([key, val]) => {
       return `${prettyPrint(value.__keys.get(key) as TypedValue)}: ${prettyPrint(val)}`
     })
     return `{${entries.join(', ')}}`
+  }
+
+  if (value instanceof XRecord) {
+    const members = Array.from(value.__value.entries()).map(([name, val]) => {
+      return `${name}: ${prettyPrint(val)}`
+    })
+    return `${(value as object).constructor.name.toLowerCase()} {${members.join(', ')}}`
   }
 
   return value.__toString()
