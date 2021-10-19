@@ -11,6 +11,7 @@ import XOptional from './std/optional'
 import XSet from './std/set'
 import XString from './std/string'
 import XMap from './std/map'
+import XRecord from './std/record'
 
 interface IntegerHint {
   kind: 'integer'
@@ -27,10 +28,17 @@ interface OptionalHint {
   value?: unknown
 }
 
+interface RecordHint {
+  kind: 'record'
+  name: string
+  value: Record<string, unknown>
+}
+
 type TypeHint
   = IntegerHint
   | FloatHint
   | OptionalHint
+  | RecordHint
 
 function isTypeHint (value: unknown): value is TypeHint {
   if (typeof value !== 'object' || value === null) return false
@@ -39,7 +47,7 @@ function isTypeHint (value: unknown): value is TypeHint {
 
   return (
     typeof kind === 'string' &&
-    ['integer', 'float', 'optional'].includes(kind)
+    ['integer', 'float', 'optional', 'record'].includes(kind)
   )
 }
 
@@ -55,7 +63,11 @@ export default {
     return interpreter.eval()
   },
 
-  fromJs (value: unknown, environment: Environment = new Map()): TypedValue {
+  fromJs (
+    value: unknown,
+    environment: Environment = new Map(),
+    records: Records = new Map()
+  ): TypedValue {
     if (typeof value === 'number') {
       if (Math.trunc(value) === value) {
         return new XInteger(value, environment)
@@ -95,6 +107,17 @@ export default {
         case 'integer': return new XInteger(value.value, environment)
         case 'float': return new XFloat(value.value, environment)
         case 'optional': return new XOptional(environment, this.fromJs(value.value))
+        case 'record': {
+          const RecordType = records.get(value.name)
+          if (RecordType === undefined) {
+            throw new Error(`No registered record named "${value.name}`)
+          }
+          const members: Map<string, TypedValue> = new Map()
+          for (const [k, v] of Object.entries(value.value)) {
+            members.set(k, this.fromJs(v))
+          }
+          return new RecordType(members, environment)
+        }
       }
     }
 
@@ -129,6 +152,16 @@ export default {
         map.set(this.toJs(value.__keys.get(key) as TypedValue), this.toJs(val))
         return map
       }, new Map())
+    }
+
+    if (value instanceof XRecord) {
+      return Array.from(value.__value.entries()).reduce<Record<string, any>>(
+        (obj, [name, value]) => {
+          obj[name] = this.toJs(value)
+          return obj
+        },
+        {}
+      )
     }
 
     throw new TypeError(`Conversion not supported for ${value.kind}`)
