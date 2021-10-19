@@ -6,6 +6,10 @@
     "moduleResolution": "node",
     "sourceRoot": "src",
     "sourceMap": true,
-    "outDir": "dist"
-  }
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": [
+    "src/**/*"
+  ]
 }
