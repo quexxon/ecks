@@ -32,9 +32,7 @@ export default class XInteger {
 
   [Symbol.for('+')] (value: TypedValue): XInteger | XFloat {
     if (!isNumber(value)) throw new TypeError()
-
     const n = this.#value + value.__value
-
     return value instanceof XFloat ? new XFloat(n, this.#state) : this.__new(n)
   }
 
@@ -56,6 +54,18 @@ export default class XInteger {
       return new XFloat(this.#value / value.__value, this.#state)
     }
     return this.__new(Math.trunc(this.#value / value.__value))
+  }
+
+  [Symbol.for('%')] (value: TypedValue): XInteger | XFloat {
+    if (!isNumber(value)) throw new TypeError()
+    const n = this.#value % value.__value
+    return value instanceof XFloat ? new XFloat(n, this.#state) : this.__new(n)
+  }
+
+  [Symbol.for('^')] (value: TypedValue): XInteger | XFloat {
+    if (!isNumber(value)) throw new TypeError()
+    const n = this.#value ** value.__value
+    return value instanceof XFloat ? new XFloat(n, this.#state) : this.__new(n)
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {

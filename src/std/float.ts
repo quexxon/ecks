@@ -22,6 +22,34 @@ export default class XFloat {
     return new XInteger(this.#value, this.#state)
   }
 
+  ceil (): XFloat {
+    return this.__new(Math.ceil(this.#value))
+  }
+
+  floor (): XFloat {
+    return this.__new(Math.floor(this.#value))
+  }
+
+  rnd (): XFloat {
+    return this.__new(Math.round(this.#value))
+  }
+
+  ceili (): XInteger {
+    return new XInteger(Math.ceil(this.#value), this.#state)
+  }
+
+  floori (): XInteger {
+    return new XInteger(Math.floor(this.#value), this.#state)
+  }
+
+  rndi (): XInteger {
+    return new XInteger(Math.round(this.#value), this.#state)
+  }
+
+  sqrt (): XFloat {
+    return this.__new(Math.sqrt(this.#value))
+  }
+
   clamp (x: XInteger | XFloat, y: XInteger | XFloat): XFloat {
     if (this.#value < x.__value) return this.__new(x.__value)
     if (this.#value > y.__value) return this.__new(y.__value)
@@ -54,6 +82,16 @@ export default class XFloat {
   [Symbol.for('/')] (value: TypedValue): XFloat {
     if (!isNumber(value)) throw new TypeError()
     return this.__new(this.#value / value.__value)
+  }
+
+  [Symbol.for('%')] (value: TypedValue): XFloat {
+    if (!isNumber(value)) throw new TypeError()
+    return this.__new(this.#value % value.__value)
+  }
+
+  [Symbol.for('^')] (value: TypedValue): XFloat {
+    if (!isNumber(value)) throw new TypeError()
+    return this.__new(this.#value ** value.__value)
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {

@@ -108,6 +108,8 @@ export default class Scanner {
     while ((this.#peek() !== quoteChar || inExpression) && !this.#isAtEnd()) {
       if (isEscape) {
         isEscape = false
+        this.#advance()
+        continue
       } else {
         if (isTemplateString && this.#peek() === '{') {
           if (depth === 0) inExpression = true

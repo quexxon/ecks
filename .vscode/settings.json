@@ -4,9 +4,12 @@
     "standard.engine": "ts-standard",
     "standard.usePackageJson": true,
     "cSpell.words": [
+        "ceili",
         "Ecks",
+        "floori",
         "padl",
         "padr",
+        "rndi",
         "triml",
         "trimr"
     ]

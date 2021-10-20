@@ -65,6 +65,28 @@ export default class XArray {
     }))
   }
 
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
+    // TypeScript bug: Symbols cannot be used to index class
+    // Ref: https://github.com/microsoft/TypeScript/issues/38009
+    interface EqOperand { [key: symbol]: (r: any) => XBoolean }
+
+    if (!(value instanceof XArray)) throw new TypeError(`Expected ${this.kind}`)
+    let isEqual = true
+    if (this.__length !== value.__length) {
+      isEqual = false
+    } else {
+      for (let i = 0; i < this.__length; i++) {
+        const v1 = this.#value[i]
+        const v2 = value.__value[i]
+        if (!((v1 as object) as EqOperand)[Symbol.for('=')](v2).__value) {
+          isEqual = false
+          break
+        }
+      }
+    }
+    return new XBoolean(isEqual, this.#state)
+  }
+
   [Symbol.for('+')] (value: TypedValue): XArray {
     if (!(value instanceof XArray)) throw new TypeError()
     if (value.__length === 0) return this

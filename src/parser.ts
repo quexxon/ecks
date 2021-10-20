@@ -102,9 +102,19 @@ export default class Parser {
   }
 
   #factor (): Expression {
+    let expression: Expression = this.#exponent()
+
+    while (this.#match(TokenKind.Slash, TokenKind.Star, TokenKind.Percent)) {
+      expression = binary(expression, this.#previous(), this.#exponent())
+    }
+
+    return expression
+  }
+
+  #exponent (): Expression {
     let expression: Expression = this.#optional()
 
-    while (this.#match(TokenKind.Slash, TokenKind.Star)) {
+    while (this.#match(TokenKind.Caret)) {
       expression = binary(expression, this.#previous(), this.#optional())
     }
 

@@ -61,6 +61,7 @@ export default class XSet {
   }
 
   __toString (): string {
-    return `$[${Array.from(this.#value.values()).map(x => x.__toString()).join(' ')}]`
+    const values = Array.from(this.#value.values())
+    return `$[${values.map(x => x.__toString()).join(' ')}]`
   }
 }

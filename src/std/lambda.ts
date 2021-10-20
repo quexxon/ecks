@@ -2,6 +2,7 @@ import { Expression, Identifier, toString, TypedValue } from '../ast'
 import Interpreter from '../interpreter'
 import { State } from '../types'
 import XArray from './array'
+import XBoolean from './boolean'
 
 interface Lambda {
   params: Identifier[]
@@ -39,6 +40,12 @@ export default class XLambda {
 
     const interpreter = new Interpreter(this.#value.body, state)
     return interpreter.eval()
+  }
+
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
+    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
+    const isEqual = this.__toString() === value.__toString()
+    return new XBoolean(isEqual, this.#state)
   }
 
   get __value (): Lambda { return this.#value }
