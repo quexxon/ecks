@@ -27,6 +27,7 @@ import XLambda from './std/lambda'
 import XMap from './std/map'
 import XOptional from './std/optional'
 import XSet from './std/set'
+import XString from './std/string'
 import XTemplateString from './std/templateString'
 import XTuple from './std/tuple'
 import { State } from './types'
@@ -253,6 +254,10 @@ export default class Interpreter {
     const receiver = this.#evaluate(index.receiver)
 
     if (receiver instanceof XArray) {
+      return receiver.at(this.#evaluate(index.index))
+    }
+
+    if (receiver instanceof XString) {
       return receiver.at(this.#evaluate(index.index))
     }
 
