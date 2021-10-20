@@ -33,6 +33,14 @@ export default class XArray {
     return new XInteger(this.#value.length, this.#state)
   }
 
+  last (): XOptional {
+    if (this.__value.length > 0) {
+      return new XOptional(this.#state, this.#value[this.#value.length - 1])
+    } else {
+      return new XOptional(this.#state)
+    }
+  }
+
   map (lambda: XLambda): XArray {
     return this.__new(this.#value.map(v => lambda.call(v)))
   }
