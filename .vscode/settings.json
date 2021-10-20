@@ -4,6 +4,10 @@
     "standard.engine": "ts-standard",
     "standard.usePackageJson": true,
     "cSpell.words": [
-        "Ecks"
+        "Ecks",
+        "padl",
+        "padr",
+        "triml",
+        "trimr"
     ]
 }
