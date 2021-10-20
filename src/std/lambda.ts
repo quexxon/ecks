@@ -41,6 +41,8 @@ export default class XLambda {
     return interpreter.eval()
   }
 
+  get __value (): Lambda { return this.#value }
+
   __toString (): string {
     return `|${this.#value.params.map(x => x.name).join(' ')}| ${toString(this.#value.body)}`
   }
