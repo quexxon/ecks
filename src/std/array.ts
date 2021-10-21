@@ -66,25 +66,27 @@ export default class XArray {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    // TypeScript bug: Symbols cannot be used to index class
-    // Ref: https://github.com/microsoft/TypeScript/issues/38009
-    interface EqOperand { [key: symbol]: (r: any) => XBoolean }
+    return new XBoolean(this.__eq(value), this.#state)
+  }
 
-    if (!(value instanceof XArray)) throw new TypeError(`Expected ${this.kind}`)
-    let isEqual = true
-    if (this.__length !== value.__length) {
-      isEqual = false
-    } else {
-      for (let i = 0; i < this.__length; i++) {
-        const v1 = this.#value[i]
-        const v2 = value.__value[i]
-        if (!((v1 as object) as EqOperand)[Symbol.for('=')](v2).__value) {
-          isEqual = false
-          break
-        }
-      }
-    }
-    return new XBoolean(isEqual, this.#state)
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
   }
 
   [Symbol.for('+')] (value: TypedValue): XArray {
@@ -104,13 +106,43 @@ export default class XArray {
   }
 
   get __value (): TypedValue[] { return this.#value }
-
-  get __length (): number {
-    return this.#value.length
-  }
+  get __length (): number { return this.#value.length }
 
   __new (value: TypedValue[]): XArray {
     return new XArray(value, this.#state)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XArray)) throw new TypeError(`Expected ${this.kind}`)
+    if (this.__length !== value.__length) return false
+    for (let i = 0; i < this.__length; i++) {
+      if (!this.#value[i].__eq(value.__value[i])) return false
+    }
+    return true
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XArray)) throw new TypeError(`Expected ${this.kind}`)
+
+    const limit = Math.min(this.__length, value.__length)
+    for (let i = 0; i < limit; i++) {
+      if (this.#value[i].__lt(value.__value[i])) return true
+      if (this.#value[i].__gt(value.__value[i])) return false
+    }
+
+    return false
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XArray)) throw new TypeError(`Expected ${this.kind}`)
+
+    const limit = Math.min(this.__length, value.__length)
+    for (let i = 0; i < limit; i++) {
+      if (this.#value[i].__gt(value.__value[i])) return true
+      if (this.#value[i].__lt(value.__value[i])) return false
+    }
+
+    return false
   }
 
   __toString (): string {

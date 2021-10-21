@@ -43,12 +43,45 @@ export default class XLambda {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
-    const isEqual = this.__toString() === value.__toString()
-    return new XBoolean(isEqual, this.#state)
+    return new XBoolean(this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
   }
 
   get __value (): Lambda { return this.#value }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
+    return this.__toString() === value.__toString()
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
+    return this.__toString() < value.__toString()
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
+    return this.__toString() > value.__toString()
+  }
 
   __toString (): string {
     return `|${this.#value.params.map(x => x.name).join(' ')}| ${toString(this.#value.body)}`

@@ -13,22 +13,95 @@ export default abstract class XRecord {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof (this as object).constructor)) {
-      throw new TypeError(`Expected ${this.__name}`)
-    }
-    return new XBoolean(this.__toString() === value.__toString(), this.__state)
+    return new XBoolean(this.__eq(value), this.__state)
   }
 
-  abstract __new (value: Map<string, TypedValue>): XRecord
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.__state)
+  }
+
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.__state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.__state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.__state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.__state)
+  }
 
   get __name (): string {
     return (this as object).constructor.name.toLocaleLowerCase()
   }
 
+  abstract __new (value: Map<string, TypedValue>): XRecord
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof (this as object).constructor)) {
+      throw new TypeError(`Expected ${this.__name}`)
+    }
+    return this.__toString() === value.__toString()
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XRecord && value instanceof (this as object).constructor)) {
+      throw new TypeError(`Expected ${this.__name}`)
+    }
+
+    const sortedValue = Array.from(this.__value)
+      .sort(([x], [y]) => {
+        if (x < y) return -1
+        if (x > y) return 1
+        return 0
+      })
+
+    for (const [k, v1] of sortedValue) {
+      const v2 = value.__value.get(k)
+      if (v2 === undefined) throw new TypeError()
+      if (v1.__lt(v2)) return true
+      if (v1.__gt(v2)) return false
+    }
+
+    return false
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XRecord && value instanceof (this as object).constructor)) {
+      throw new TypeError(`Expected ${this.__name}`)
+    }
+
+    const sortedValue = Array.from(this.__value)
+      .sort(([x], [y]) => {
+        if (x < y) return -1
+        if (x > y) return 1
+        return 0
+      })
+
+    for (const [k, v1] of sortedValue) {
+      const v2 = value.__value.get(k)
+      if (v2 === undefined) throw new TypeError()
+      if (v1.__gt(v2)) return true
+      if (v1.__lt(v2)) return false
+    }
+
+    return false
+  }
+
   __toString (): string {
-    const members = Array.from(this.__value.entries()).map(([name, value]) => {
-      return `${name}: ${value.__toString()}`
-    }).join(', ')
+    const members = Array.from(this.__value.entries())
+      .sort(([x], [y]) => {
+        if (x < y) return -1
+        if (x > y) return 1
+        return 0
+      })
+      .map(([name, value]) => `${name}: ${value.__toString()}`)
+      .join(', ')
 
     return `${this.__name} {${members}}`
   }

@@ -98,10 +98,15 @@ function prettyPrint (value: TypedValue): string {
   }
 
   if (value instanceof XRecord) {
-    const members = Array.from(value.__value.entries()).map(([name, val]) => {
-      return `${name}: ${prettyPrint(val)}`
-    })
-    return `${(value as object).constructor.name.toLowerCase()} {${members.join(', ')}}`
+    const members = Array.from(value.__value.entries())
+      .sort(([prop1], [prop2]) => {
+        if (prop1 < prop2) return -1
+        if (prop1 > prop2) return 1
+        return 0
+      })
+      .map(([name, val]) => `${name}: ${prettyPrint(val)}`)
+      .join(', ')
+    return `${(value as object).constructor.name.toLowerCase()} {${members}}`
   }
 
   return value.__toString()

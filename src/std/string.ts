@@ -156,33 +156,27 @@ export default class XString {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value === value.__value, this.#state)
+    return new XBoolean(this.__eq(value), this.#state)
   }
 
   [Symbol.for('!=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value !== value.__value, this.#state)
+    return new XBoolean(!this.__eq(value), this.#state)
   }
 
   [Symbol.for('<')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value < value.__value, this.#state)
+    return new XBoolean(this.__lt(value), this.#state)
   }
 
   [Symbol.for('<=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value <= value.__value, this.#state)
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
   }
 
   [Symbol.for('>')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value > value.__value, this.#state)
+    return new XBoolean(this.__gt(value), this.#state)
   }
 
   [Symbol.for('>=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XString)) throw new TypeError()
-    return new XBoolean(this.#value >= value.__value, this.#state)
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
   }
 
   get __value (): string { return this.#value }
@@ -190,6 +184,21 @@ export default class XString {
 
   __new (value: string): XString {
     return new XString(value, this.#state)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value === value.__value
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value < value.__value
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value > value.__value
   }
 
   __toString (): string {

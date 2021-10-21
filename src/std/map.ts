@@ -17,6 +17,11 @@ export default class XMap {
     const values: Map<string, TypedValue> = new Map()
 
     if (value.length > 0) {
+      value.sort(([x], [y]) => {
+        if (x.__lt(y)) return -1
+        if (x.__gt(y)) return 1
+        return 0
+      })
       const [keyType, valType] = value[0].map(x => x.kind)
       this.__keyType = keyType
       this.__valType = valType
@@ -83,25 +88,27 @@ export default class XMap {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    if (!(value instanceof XMap)) throw new TypeError('Expected map')
+    return new XBoolean(this.__eq(value), this.#state)
+  }
 
-    // TypeScript bug: Symbols cannot be used to index class
-    // Ref: https://github.com/microsoft/TypeScript/issues/38009
-    interface EqOperand { [key: symbol]: (r: any) => XBoolean }
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
 
-    let isEqual = true
-    for (const [k, v] of this.#value) {
-      const val = value.__value.get(k)
-      if (
-        val === undefined ||
-        !((v as object) as EqOperand)[Symbol.for('=')](val).__value
-      ) {
-        isEqual = false
-        break
-      }
-    }
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
 
-    return new XBoolean(isEqual, this.#state)
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
   }
 
   [Symbol.for('+')] (value: TypedValue): XMap {
@@ -138,6 +145,65 @@ export default class XMap {
 
   __new (value: Array<[TypedValue, TypedValue]>): XMap {
     return new XMap(value, this.#state)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XMap)) throw new TypeError('Expected map')
+
+    for (const [k, v] of this.#value) {
+      const val = value.__value.get(k)
+      if (val === undefined || !v.__eq(val)) return false
+    }
+
+    return true
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XMap)) throw new TypeError('Expected map')
+
+    if (this.__length === 0 && value.__length === 0) return false
+    if (this.__length === 0) return true
+
+    const thisKeys = Array.from(this.#keys.values())
+    const thatKeys = Array.from(value.__keys.values())
+    const limit = Math.min(this.__length, value.__length)
+
+    for (let i = 0; i < limit; i++) {
+      if (thisKeys[i].__lt(thatKeys[i])) return true
+      if (thisKeys[i].__gt(thatKeys[i])) return false
+      const key = thisKeys[i].__toString()
+      const v1 = this.#value.get(key)
+      const v2 = value.__value.get(key)
+      if (v1 === undefined || v2 === undefined) throw new Error()
+      if (v1.__lt(v2)) return true
+      if (v1.__gt(v2)) return false
+    }
+
+    return this.__length < value.__length
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XMap)) throw new TypeError('Expected map')
+
+    if (this.__length === 0 && value.__length === 0) return false
+    if (value.__length === 0) return true
+
+    const thisKeys = Array.from(this.#keys.values())
+    const thatKeys = Array.from(value.__keys.values())
+    const limit = Math.min(this.__length, value.__length)
+
+    for (let i = 0; i < limit; i++) {
+      if (thisKeys[i].__gt(thatKeys[i])) return true
+      if (thisKeys[i].__lt(thatKeys[i])) return false
+      const key = thisKeys[i].__toString()
+      const v1 = this.#value.get(key)
+      const v2 = value.__value.get(key)
+      if (v1 === undefined || v2 === undefined) throw new Error()
+      if (v1.__gt(v2)) return true
+      if (v1.__lt(v2)) return false
+    }
+
+    return this.__length < value.__length
   }
 
   __toString (): string {

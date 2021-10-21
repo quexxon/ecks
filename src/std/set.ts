@@ -16,6 +16,11 @@ export default class XSet {
         throw new TypeError()
       }
     }
+    value.sort((x, y) => {
+      if (x.__lt(y)) return -1
+      if (x.__gt(y)) return 1
+      return 0
+    })
     this.#value = new Map(value.map(v => [v.__toString(), v]))
     this.#state = state
   }
@@ -50,14 +55,79 @@ export default class XSet {
     return this.union(value)
   }
 
-  get __value (): Map<string, TypedValue> { return this.#value }
-
-  get __length (): number {
-    return this.#value.size
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__eq(value), this.#state)
   }
+
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
+  }
+
+  get __value (): Map<string, TypedValue> { return this.#value }
+  get __length (): number { return this.#value.size }
 
   __new (value: TypedValue[]): XSet {
     return new XSet(value, this.#state)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XSet)) throw new TypeError(`Expected ${this.kind}`)
+
+    if (this.__length !== value.__length) return false
+
+    const v1 = Array.from(this.#value.values())
+    const v2 = Array.from(value.__value.values())
+    for (let i = 0; i < this.__length; i++) {
+      if (!v1[i].__eq(v2[i])) return false
+    }
+
+    return true
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XSet)) throw new TypeError(`Expected ${this.kind}`)
+
+    const v1 = Array.from(this.#value.values())
+    const v2 = Array.from(value.__value.values())
+    const limit = Math.min(this.#value.size, value.__value.size)
+
+    for (let i = 0; i < limit; i++) {
+      if (v1[i].__lt(v2[i])) return true
+      if (v1[i].__gt(v2[i])) return false
+    }
+
+    return this.__length < value.__length
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XSet)) throw new TypeError(`Expected ${this.kind}`)
+
+    const v1 = Array.from(this.#value.values())
+    const v2 = Array.from(value.__value.values())
+    const limit = Math.min(this.#value.size, value.__value.size)
+
+    for (let i = 0; i < limit; i++) {
+      if (v1[i].__gt(v2[i])) return true
+      if (v1[i].__lt(v2[i])) return false
+    }
+
+    return this.__length > value.__length
   }
 
   __toString (): string {

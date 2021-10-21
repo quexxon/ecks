@@ -1,6 +1,7 @@
 import { State } from '../types'
 import XString from './string'
 import Ecks from '..'
+import { TypedValue } from '../ast'
 
 export default class XTemplateString {
   kind = 'template_string'
@@ -57,6 +58,22 @@ export default class XTemplateString {
   }
 
   get __value (): string { return this.#value }
+  get __length (): number { return this.#value.length }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XTemplateString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value === value.__value
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XTemplateString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value < value.__value
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XTemplateString)) throw new TypeError(`Expected ${this.kind}`)
+    return this.#value > value.__value
+  }
 
   __toString (): string {
     return this.#value.toString()

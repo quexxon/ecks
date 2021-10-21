@@ -24,20 +24,27 @@ export default class XOptional {
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
-    // TypeScript bug: Symbols cannot be used to index class
-    // Ref: https://github.com/microsoft/TypeScript/issues/38009
-    interface EqOperand { [key: symbol]: (r: any) => XBoolean }
+    return new XBoolean(this.__eq(value), this.#state)
+  }
 
-    let isEqual
-    if (this.#value === undefined && value.__value === undefined) {
-      isEqual = true
-    } else if (this.#value === undefined || value.__value === undefined) {
-      isEqual = false
-    } else {
-      isEqual = ((this.#value as object) as EqOperand)[Symbol.for('=')](value.__value).__value
-    }
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
 
-    return new XBoolean(isEqual, this.#state)
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
   }
 
   [Symbol.for('??')] (value: TypedValue): TypedValue {
@@ -48,6 +55,31 @@ export default class XOptional {
 
   __new (value?: TypedValue): XOptional {
     return new XOptional(this.#state, value)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XOptional)) throw new TypeError(`Expected ${this.kind}`)
+    if (this.#value === undefined && value.__value === undefined) return true
+    if (this.#value === undefined || value.__value === undefined) return false
+    return this.#value.__eq(value.__value)
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XOptional)) throw new TypeError(`Expected ${this.kind}`)
+    if (this.#value === undefined && value.__value === undefined) return false
+    if (this.#value === undefined || value.__value === undefined) {
+      return this.#value === undefined
+    }
+    return this.#value.__lt(value.__value)
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XOptional)) throw new TypeError(`Expected ${this.kind}`)
+    if (this.#value === undefined && value.__value === undefined) return false
+    if (this.#value === undefined || value.__value === undefined) {
+      return this.#value !== undefined
+    }
+    return this.#value.__gt(value.__value)
   }
 
   __toString (): string {

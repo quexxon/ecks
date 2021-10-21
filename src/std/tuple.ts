@@ -1,5 +1,6 @@
 import { TypedValue } from '../ast'
 import { State } from '../types'
+import XBoolean from './boolean'
 import XInteger from './integer'
 
 export default class XTuple {
@@ -24,11 +25,66 @@ export default class XTuple {
     return new XInteger(this.__length, this.#state)
   }
 
+  [Symbol.for('=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('!=')] (value: TypedValue): XBoolean {
+    return new XBoolean(!this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('<')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value), this.#state)
+  }
+
+  [Symbol.for('<=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
+  }
+
+  [Symbol.for('>')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value), this.#state)
+  }
+
+  [Symbol.for('>=')] (value: TypedValue): XBoolean {
+    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
+  }
+
   get __value (): TypedValue[] { return this.#value }
   get __length (): number { return this.#value.length }
 
   __new (value: TypedValue[]): XTuple {
     return new XTuple(value, this.#state)
+  }
+
+  __eq (value: TypedValue): boolean {
+    if (!(value instanceof XTuple)) throw new TypeError(`Expected ${this.kind}`)
+    if (this.__length !== value.__length) return false
+    for (let i = 0; i < this.__length; i++) {
+      if (!this.#value[i].__eq(value.__value[i])) return false
+    }
+    return true
+  }
+
+  __lt (value: TypedValue): boolean {
+    if (!(value instanceof XTuple)) throw new TypeError(`Expected ${this.kind}`)
+
+    const limit = Math.min(this.__length, value.__length)
+    for (let i = 0; i < limit; i++) {
+      if (this.#value[i].__lt(value.__value[i])) return true
+    }
+
+    return false
+  }
+
+  __gt (value: TypedValue): boolean {
+    if (!(value instanceof XTuple)) throw new TypeError(`Expected ${this.kind}`)
+
+    const limit = Math.min(this.__length, value.__length)
+    for (let i = 0; i < limit; i++) {
+      if (this.#value[i].__gt(value.__value[i])) return true
+    }
+
+    return false
   }
 
   __toString (): string {
