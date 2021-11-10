@@ -1,74 +1,56 @@
-expression = literal | grouping | unary | binary | ternary | cond | case
-           | IDENTIFIER | method_call ;
+expression = equality ;
 
-literal = number | bool | string | array | set | tuple | map ;
+equality = bool_op ( ( "=" | "!=" ) bool_op )* ;
+
+bool_op = comparison ( ( "and" | "or" ) comparison )* ;
+
+comparison = term ( ( "<" | "<=" | ">" | ">=" ) term )* ;
+
+term = factor ( ( "-" | "+" ) factor )* ;
+
+factor = method ( ( "/" | "*" ) method )* ;
+
+method = unary ( "." IDENTIFIER ( "(" ( expression ","? )* ")" )? )* ;
+
+unary = ( "!" | "-" ) unary | primary ;
+
+primary = grouping | number | boolean | string | array ;
+
+grouping = "(" expression ")" ;
 
 number = integer | float ;
 
 integer = octal | decimal | hexadecimal ;
 
-float = decimal "." digit+ exponent? ;
+float = ( "0." | decimal "." ) digit+ exponent? ;
 
-exponent = ( "e" | "E" ) "-"? ( "0" | decimal ) ;
+exponent = ( "e" | "E" ) "-"? ( "0" | decimal )+ ;
 
-octal = "0" ( octal_digit | "_" )* ;
+octal = "0" octal_digit+ ;
 
 octal_digit = "0" | non_zero_octal_digit ;
 
 non_zero_octal_digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
 
-decimal = non_zero_digit ( digit | "_" )* ;
+decimal = "0" | non_zero_digit digit* ;
 
 digit = "0" | non_zero_digit ;
 
 non_zero_digit = octal_digit | "8" | "9" ;
 
-hexadecimal = "#" ( hex_digit | "_" )* ;
+hexadecimal = "#" hex_digit+ ;
 
 hex_digit = "0" | non_zero_hex_digit ;
 
 non_zero_hex_digit = digit | "A" | "a" | "B" | "b" | "C" | "c" | "D" | "d"
                    | "E" | "e" | "F" | "f" ;
 
-bool = "true" | "false" ;
+boolean = "true" | "false" ;
 
 string = '"' CHAR* '"'
        | "'" CHAR* "'"
        | "`" ( CHAR | "{" expression "}" )* "`" ;
 
-array = "[" (expression ","?)* "]" ;
+array = '[' expression* ']'
 
-set = "$[" (expression ","?)* "]" ;
-
-tuple = "@[" (expression ","?)+ "]" ;
-
-map = "{" ( key ":" expression ","? )* "}" ;
-
-key = ALPHANUMERIC+
-    | '"' CHAR+ '"'
-    | "'" CHAR+ "'" ;
-
-grouping = "(" expression ")" ;
-
-unary = ( "-" | "!" ) expression ;
-
-binary = expression operator expression ;
-
-operator = "+" | "-" | "/" | "*" | "^" | "%" | "&" | "|" | "=" | "<" | "<="
-         | ">" | ">=" | "??" ;
-
-ternary = expression "?" expression ":" expression ;
-
-cond = "cond" "{" branch+ else_branch? "}";
-
-case = "case" expression "{" branch+ else_branch? "}" ;
-
-branch = expression ":" expression ","? ;
-
-else_branch = "else" ":" expression ;
-
-method_call = expression "." IDENTIFIER ( "(" ( param "," )* param? ")" )? ;
-
-param = lambda | expression ;
-
-lambda = "|" ( IDENTIFIER ","? )* IDENTIFIER? "|" expression ;
+set = '$[' expression* ']'
