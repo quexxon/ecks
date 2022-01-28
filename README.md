@@ -231,7 +231,7 @@ a.len        // 3
 
 ### Map
 
-A homogenous key/value collection where value is always a string.
+A homogenous key/value collection where key is always a string.
 
 #### Syntax
 
