@@ -239,15 +239,16 @@ export default class Interpreter {
 
   #methodCall (methodCall: MethodCall): TypedValue {
     const receiver = this.#evaluate(methodCall.receiver)
+    const identifier = methodCall.identifier.name.toLowerCase()
 
     interface XObject { [key: string]: (...args: any) => TypedValue }
 
-    if (methodCall.identifier.name in receiver) {
-      const method = ((receiver as object) as XObject)[methodCall.identifier.name]
+    if (identifier in receiver) {
+      const method = ((receiver as object) as XObject)[identifier]
       return method.apply(receiver, methodCall.arguments.map(exp => this.#evaluate(exp)))
     }
 
-    throw new TypeError(`No method "${methodCall.identifier.name}" for ${receiver.kind}`)
+    throw new TypeError(`No method "${identifier}" for ${receiver.kind}`)
   }
 
   #index (index: Index): TypedValue {
@@ -285,7 +286,7 @@ export default class Interpreter {
   }
 
   #identifier (identifier: Identifier): TypedValue {
-    const value = this.#state.environment.get(identifier.name)
+    const value = this.#state.environment.get(identifier.name.toLowerCase())
 
     if (value === undefined) {
       throw new TypeError(`Unrecognized identifier: ${identifier.name}`)
