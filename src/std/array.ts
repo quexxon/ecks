@@ -4,6 +4,8 @@ import XBoolean from './boolean'
 import XInteger from './integer'
 import XLambda from './lambda'
 import XOptional from './optional'
+import XSet from './set'
+import XString from './string'
 
 export default class XArray {
   kind = 'array'
@@ -61,6 +63,15 @@ export default class XArray {
     } else {
       return new XOptional(this.#state)
     }
+  }
+
+  slice (start: TypedValue, end: TypedValue): XArray {
+    if (!(start instanceof XInteger)) throw new TypeError()
+    if (end === undefined) {
+      return this.__new(this.#value.slice(start.__value))
+    }
+    if (!(end instanceof XInteger)) throw new TypeError()
+    return this.__new(this.#value.slice(start.__value, end.__value))
   }
 
   map (lambda: XLambda): XArray {
@@ -145,6 +156,69 @@ export default class XArray {
       }
     }
     return new XOptional(this.#state)
+  }
+
+  sort (): XArray {
+    return this.__new(Array.from(this.#value).sort((x, y) => {
+      if (x.__lt(y)) return -1
+      if (x.__gt(y)) return 1
+      return 0
+    }))
+  }
+
+  rsort (): XArray {
+    return this.__new(Array.from(this.#value).sort((x, y) => {
+      if (x.__gt(y)) return -1
+      if (x.__lt(y)) return 1
+      return 0
+    }))
+  }
+
+  sortby (comparator: TypedValue): XArray {
+    if (!(comparator instanceof XLambda)) throw new TypeError()
+    return this.__new(Array.from(this.#value).sort((x, y) => {
+      const value = comparator.call(x, y).__value
+      if (typeof value !== 'number') {
+        throw new TypeError()
+      }
+      return value
+    }))
+  }
+
+  uniq (): XArray {
+    const array: TypedValue[] = []
+    const set = new Set()
+    for (const entry of this.#value) {
+      if (!set.has(entry.__toString())) {
+        array.push(entry)
+        set.add(entry.__toString())
+      }
+    }
+    return this.__new(array)
+  }
+
+  toset (): XSet {
+    return new XSet(this.#value, this.#state)
+  }
+
+  join (string: TypedValue): XString {
+    if (!(string instanceof XString)) throw new TypeError()
+    return new XString(
+      this.#value.map(v => v.__toString()).join(string.__value),
+      this.#state
+    )
+  }
+
+  flat (): XArray {
+    const array: TypedValue[] = []
+    for (const entry of this.#value) {
+      if (entry instanceof XArray) {
+        array.push(...entry.flat().__value)
+      } else {
+        array.push(entry)
+      }
+    }
+    return this.__new(array)
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
