@@ -79,7 +79,7 @@ export default class XString {
     )
   }
 
-  padl (length: TypedValue, fill: TypedValue): XString {
+  lpad (length: TypedValue, fill: TypedValue): XString {
     if (!(length instanceof XInteger)) {
       throw new TypeError('Expected `length` to be an integer')
     }
@@ -91,7 +91,7 @@ export default class XString {
     return this.__new(this.#value.padStart(length.__value, fill.__value))
   }
 
-  padr (length: TypedValue, fill: TypedValue): XString {
+  rpad (length: TypedValue, fill: TypedValue): XString {
     if (!(length instanceof XInteger)) {
       throw new TypeError('Expected `length` to be an integer')
     }
@@ -107,11 +107,11 @@ export default class XString {
     return this.__new(this.#value.trim())
   }
 
-  triml (): XString {
+  ltrim (): XString {
     return this.__new(this.#value.trimStart())
   }
 
-  trimr (): XString {
+  rtrim (): XString {
     return this.__new(this.#value.trimEnd())
   }
 

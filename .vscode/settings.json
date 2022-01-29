@@ -7,10 +7,10 @@
         "ceili",
         "Ecks",
         "floori",
-        "padl",
-        "padr",
+        "lpad",
+        "ltrim",
         "rndi",
-        "triml",
-        "trimr"
+        "rpad",
+        "rtrim"
     ]
 }
