@@ -11,12 +11,14 @@
         "floori",
         "lpad",
         "ltrim",
+        "nany",
         "rfind",
         "rfindi",
         "rndi",
         "rpad",
         "rsort",
         "rtrim",
+        "sortby",
         "toset"
     ]
 }

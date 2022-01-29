@@ -102,6 +102,34 @@ export default class XArray {
     }))
   }
 
+  all (lambda: TypedValue): XBoolean {
+    if (!(lambda instanceof XLambda)) throw new TypeError()
+    return new XBoolean(
+      this.#value.every(x => {
+        const result = lambda.call(x)
+        if (!(result instanceof XBoolean)) throw new TypeError()
+        return result.__value
+      }),
+      this.#state
+    )
+  }
+
+  any (lambda: TypedValue): XBoolean {
+    if (!(lambda instanceof XLambda)) throw new TypeError()
+    return new XBoolean(
+      this.#value.some(x => {
+        const result = lambda.call(x)
+        if (!(result instanceof XBoolean)) throw new TypeError()
+        return result.__value
+      }),
+      this.#state
+    )
+  }
+
+  nany (lambda: TypedValue): XBoolean {
+    return new XBoolean(!this.any(lambda).__value, this.#state)
+  }
+
   rev (): XArray {
     return this.__new([...this.#value].reverse())
   }
