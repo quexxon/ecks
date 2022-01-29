@@ -354,7 +354,7 @@ export function optional (offset: number, value?: Expression): Optional {
 }
 
 export function identifier (token: Token): Identifier {
-  return { kind: 'identifier', name: token.lexeme, offset: token.offset }
+  return { kind: 'identifier', name: token.lexeme.toLowerCase(), offset: token.offset }
 }
 
 export function methodCall (
