@@ -7,13 +7,14 @@ import XOptional from './optional'
 
 export default class XArray {
   kind = 'array'
+  readonly __valueType?: string
   #value: TypedValue[]
   #state: State
 
   constructor (value: TypedValue[], state: State) {
     if (value.length > 1) {
-      const first = value[0]
-      if (!value.every(x => x.kind === first.kind)) {
+      this.__valueType = value[0].kind
+      if (!value.every(x => x.kind === this.__valueType)) {
         throw new TypeError()
       }
     }
@@ -27,6 +28,27 @@ export default class XArray {
       ? this.#value[index.__value]
       : undefined
     return new XOptional(this.#state, value)
+  }
+
+  set (index: TypedValue, value: TypedValue): XArray {
+    if (!(index instanceof XInteger)) throw new TypeError()
+    if (this.__valueType !== undefined && this.__valueType !== value.kind) {
+      throw new TypeError(`Expected a value of type ${this.__valueType}`)
+    }
+
+    let i = index.__value
+    // Negative values of i index the end of the array
+    if (i < 0) i = this.#value.length + i
+
+    if (i >= 0 && i < this.#value.length) {
+      return this.__new([
+        ...this.#value.slice(0, i),
+        value,
+        ...this.#value.slice(i + 1)
+      ])
+    }
+
+    return this
   }
 
   len (): XInteger {
@@ -55,6 +77,10 @@ export default class XArray {
     }))
   }
 
+  fold (accumulator: TypedValue, lambda: XLambda): TypedValue {
+    return this.#value.reduce((acc, v) => lambda.call(acc, v), accumulator)
+  }
+
   drop (lambda: XLambda): XArray {
     return this.__new(this.#value.filter(v => {
       const resp = lambda.call(v)
@@ -63,6 +89,62 @@ export default class XArray {
       }
       return !resp.__value
     }))
+  }
+
+  rev (): XArray {
+    return this.__new([...this.#value].reverse())
+  }
+
+  find (lambda: XLambda): XOptional {
+    const result = this.#value.find(v => {
+      const resp = lambda.call(v)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      return resp.__value
+    })
+
+    if (result === undefined) return new XOptional(this.#state)
+    return new XOptional(this.#state, result)
+  }
+
+  rfind (lambda: XLambda): XOptional {
+    for (let i = this.#value.length - 1; i >= 0; i--) {
+      const entry = this.#value[i]
+      const resp = lambda.call(entry)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      if (resp.__value) return new XOptional(this.#state, entry)
+    }
+    return new XOptional(this.#state)
+  }
+
+  findi (lambda: XLambda): XOptional {
+    const result = this.#value.findIndex(v => {
+      const resp = lambda.call(v)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      return resp.__value
+    })
+
+    if (result === -1) return new XOptional(this.#state)
+    return new XOptional(this.#state, new XInteger(result, this.#state))
+  }
+
+  rfindi (lambda: XLambda): XOptional {
+    for (let i = this.#value.length - 1; i >= 0; i--) {
+      const entry = this.#value[i]
+      const resp = lambda.call(entry)
+      if (!(resp instanceof XBoolean)) {
+        throw new Error('Lambda must return a boolean')
+      }
+      if (resp.__value) {
+        return new XOptional(this.#state, new XInteger(i, this.#state))
+      }
+    }
+    return new XOptional(this.#state)
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
