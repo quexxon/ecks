@@ -9,14 +9,14 @@ import XString from './string'
 
 export default class XArray {
   kind = 'array'
-  readonly __valueType?: string
+  #valueType?: string
   #value: TypedValue[]
   #state: State
 
   constructor (value: TypedValue[], state: State) {
-    if (value.length > 1) {
-      this.__valueType = value[0].kind
-      if (!value.every(x => x.kind === this.__valueType)) {
+    if (value.length > 0) {
+      this.#valueType = value[0].kind
+      if (!value.every(x => x.kind === this.#valueType)) {
         throw new TypeError()
       }
     }
@@ -34,8 +34,8 @@ export default class XArray {
 
   set (index: TypedValue, value: TypedValue): XArray {
     if (!(index instanceof XInteger)) throw new TypeError()
-    if (this.__valueType !== undefined && this.__valueType !== value.kind) {
-      throw new TypeError(`Expected a value of type ${this.__valueType}`)
+    if (this.#valueType !== undefined && this.#valueType !== value.kind) {
+      throw new TypeError(`Expected a value of type ${this.#valueType}`)
     }
 
     let i = index.__value
@@ -55,6 +55,21 @@ export default class XArray {
 
   len (): XInteger {
     return new XInteger(this.#value.length, this.#state)
+  }
+
+  empty (): XBoolean {
+    return new XBoolean(this.#value.length === 0, this.#state)
+  }
+
+  push (value: TypedValue): XArray {
+    if (this.#valueType === undefined) {
+      this.#valueType = value.kind
+      return this.__new([value])
+    }
+    if (value.kind !== this.#valueType) throw new TypeError()
+    const array = Array.from(this.#value)
+    array.push(value)
+    return this.__new(array)
   }
 
   last (): XOptional {
@@ -290,6 +305,7 @@ export default class XArray {
   }
 
   get __value (): TypedValue[] { return this.#value }
+  get __valueType(): string | undefined { return this.#valueType }
   get __length (): number { return this.#value.length }
 
   __new (value: TypedValue[]): XArray {
