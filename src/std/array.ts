@@ -311,7 +311,7 @@ export default class XArray {
   }
 
   get __value (): TypedValue[] { return this.#value }
-  get __valueType(): string | undefined { return this.#valueType }
+  get __valueType (): string | undefined { return this.#valueType }
   get __length (): number { return this.#value.length }
 
   __new (value: TypedValue[]): XArray {
