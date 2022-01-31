@@ -93,6 +93,12 @@ export default class XArray {
     return this.__new(this.#value.map(v => lambda.call(v)))
   }
 
+  mapi (lambda: XLambda): XArray {
+    return this.__new(
+      this.#value.map((v, i) => lambda.call(v, new XInteger(i, this.#state)))
+    )
+  }
+
   keep (lambda: XLambda): XArray {
     return this.__new(this.#value.filter(v => {
       const resp = lambda.call(v)

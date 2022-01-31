@@ -11,6 +11,7 @@
         "floori",
         "lpad",
         "ltrim",
+        "mapi",
         "nany",
         "rfind",
         "rfindi",
