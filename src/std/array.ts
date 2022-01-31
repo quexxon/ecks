@@ -253,7 +253,9 @@ export default class XArray {
   join (string: TypedValue): XString {
     if (!(string instanceof XString)) throw new TypeError()
     return new XString(
-      this.#value.map(v => v.__toString()).join(string.__value),
+      this.#value
+        .map(v => v.kind === 'string' ? v.__value : v.__toString())
+        .join(string.__value),
       this.#state
     )
   }
