@@ -1,37 +1,41 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XBoolean from './boolean'
-import XInteger from './integer'
-import XString from './string'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XBoolean from './boolean.ts'
+import XInteger from './integer.ts'
+import XString from './string.ts'
 
 function isNumber (value: unknown): value is XInteger | XFloat {
   return value instanceof XInteger || value instanceof XFloat
 }
 
 export default class XFloat {
-  kind = 'float'
-  #value: number
-  #state: State
+  kind = 'float';
+  #value: number;
+  #state: State;
 
   constructor (value: number, state: State) {
-    this.#value = value
-    this.#state = state
+    this.#value = value;
+    this.#state = state;
+  }
+
+  abs(): XFloat {
+    return this.__new(Math.abs(this.#value));
   }
 
   int (): XInteger {
-    return new XInteger(this.#value, this.#state)
+    return new XInteger(this.#value, this.#state);
   }
 
   ceil (): XFloat {
-    return this.__new(Math.ceil(this.#value))
+    return this.__new(Math.ceil(this.#value));
   }
 
   floor (): XFloat {
-    return this.__new(Math.floor(this.#value))
+    return this.__new(Math.floor(this.#value));
   }
 
   rnd (): XFloat {
-    return this.__new(Math.round(this.#value))
+    return this.__new(Math.round(this.#value));
   }
 
   ceili (): XInteger {

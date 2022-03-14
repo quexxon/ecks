@@ -2,7 +2,7 @@ import * as ReadLine from 'readline'
 import * as Chalk from 'chalk'
 
 import { TypedValue } from './ast'
-import Ecks from '.'
+import * as Ecks from '.'
 import XArray from './std/array'
 import XBoolean from './std/boolean'
 import XFloat from './std/float'
@@ -139,7 +139,7 @@ rl.on('line', (line) => {
     const environment: Environment = new Map()
     const records: Records = new Map([['point', Point]])
     const start = process.hrtime.bigint()
-    const value = Ecks.eval(input, { environment, records })
+    const value = Ecks.render(input, { environment, records })
     const duration = process.hrtime.bigint() - start
 
     console.log(`${prettyPrint(value)} :: ${value.kind}`)

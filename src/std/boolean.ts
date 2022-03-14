@@ -1,6 +1,6 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XString from './string'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XString from './string.ts'
 
 export default class XBoolean {
   kind = 'boolean'

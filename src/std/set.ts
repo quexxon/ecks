@@ -1,8 +1,8 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XBoolean from './boolean'
-import XInteger from './integer'
-import XLambda from './lambda'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XBoolean from './boolean.ts'
+import XInteger from './integer.ts'
+import XLambda from './lambda.ts'
 
 export default class XSet {
   kind = 'set'

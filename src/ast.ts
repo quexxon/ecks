@@ -1,17 +1,18 @@
-import XArray from './std/array'
-import XBoolean from './std/boolean'
-import XFloat from './std/float'
-import XInteger from './std/integer'
-import XLambda from './std/lambda'
-import XMap from './std/map'
-import XOptional from './std/optional'
-import XRecord from './std/record'
-import XSet from './std/set'
-import XString from './std/string'
-import XTemplateString from './std/templateString'
-import XTuple from './std/tuple'
-import Token, { TokenKind } from './token'
-import { State } from './types'
+import XArray from './std/array.ts'
+import XBoolean from './std/boolean.ts'
+import XFloat from './std/float.ts'
+import XInteger from './std/integer.ts'
+import XLambda from './std/lambda.ts'
+import XMap from './std/map.ts'
+import XOptional from './std/optional.ts'
+import XRecord from './std/record.ts'
+import { XDate } from './std/date.ts'
+import XSet from './std/set.ts'
+import XString from './std/string.ts'
+import XTemplateString from './std/templateString.ts'
+import XTuple from './std/tuple.ts'
+import Token, { TokenKind } from './token.ts'
+import { State } from './types.ts'
 
 export enum UnaryOperator {
   Negation = '-',
@@ -86,6 +87,7 @@ export type TypedValue
   | XString
   | XTemplateString
   | XArray
+  | XDate
   | XSet
   | XTuple
   | XMap

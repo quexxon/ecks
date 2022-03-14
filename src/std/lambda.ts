@@ -1,8 +1,8 @@
-import { Expression, Identifier, toString, TypedValue } from '../ast'
-import Interpreter from '../interpreter'
-import { State } from '../types'
-import XArray from './array'
-import XBoolean from './boolean'
+import { Expression, Identifier, toString, TypedValue } from '../ast.ts'
+import Interpreter from '../interpreter.ts'
+import { State } from '../types.ts'
+import XArray from './array.ts'
+import XBoolean from './boolean.ts'
 
 interface Lambda {
   params: Identifier[]
@@ -39,7 +39,7 @@ export default class XLambda {
     }
 
     const interpreter = new Interpreter(this.#value.body, state)
-    return interpreter.eval()
+    return interpreter.render()
   }
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {

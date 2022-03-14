@@ -1,6 +1,7 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XBoolean from './boolean'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XBoolean from './boolean.ts'
+import XOptional from './optional.ts'
 
 export default abstract class XRecord {
   kind = 'record'
@@ -11,6 +12,16 @@ export default abstract class XRecord {
     this.__value = value
     this.__state = state
   }
+
+  get (key: TypedValue): XOptional {
+    return new XOptional(this.__state, this.__value.get(key.__value as any))
+  }
+  //get(prop: string): TypedValue {
+  //  if (this.__value.has(prop)) {
+  //      return this.__value.get(prop) as TypedValue;
+  //  }
+  //  throw new TypeError("Tried to access value at non-existent index")
+  //}
 
   [Symbol.for('=')] (value: TypedValue): XBoolean {
     return new XBoolean(this.__eq(value), this.__state)

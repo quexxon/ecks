@@ -1,7 +1,7 @@
-import { State } from '../types'
-import XString from './string'
-import Ecks from '..'
-import { TypedValue } from '../ast'
+import { State } from '../types.ts'
+import XString from './string.ts'
+import * as Ecks from '../index.ts'
+import { TypedValue } from '../ast.ts'
 
 export default class XTemplateString {
   kind = 'template_string'
@@ -39,14 +39,14 @@ export default class XTemplateString {
       }
 
       if (char === '}') {
-        depth--
+        depth--;
         if (depth < 0) throw new SyntaxError('Unmatched `}` in template string')
         if (depth > 1) continue
         if (depth === 0) {
           segments.push(this.#value.slice(end, start))
           end = i + 1
           const expression = this.#value.slice(start + 1, i)
-          const value = Ecks.eval(expression, state)
+          const value = Ecks.render(expression, state)
           segments.push(value instanceof XString ? value.__value : value.__toString())
         }
       }

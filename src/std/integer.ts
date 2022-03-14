@@ -1,8 +1,8 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XBoolean from './boolean'
-import XFloat from './float'
-import XString from './string'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XBoolean from './boolean.ts'
+import XFloat from './float.ts'
+import XString from './string.ts'
 
 function isNumber (value: unknown): value is XInteger | XFloat {
   return value instanceof XInteger || value instanceof XFloat
@@ -24,6 +24,24 @@ export default class XInteger {
 
   str (): XString {
     return new XString(this.__toString(), this.#state)
+  }
+
+  abs(): XInteger {
+    return this.__new(Math.abs(this.#value));
+  }
+
+  clamp (x: XInteger | XFloat, y: XInteger | XFloat): XInteger {
+    if (this.#value < x.__value) return this.__new(x.__value)
+    if (this.#value > y.__value) return this.__new(y.__value)
+    return this
+  }
+
+  sqrt(): XFloat {
+    return new XFloat(Math.sqrt(this.#value), this.#state);
+  }
+
+  pow(exp: XInteger | XFloat) {
+    return this.__new(Math.pow(this.#value, exp.__value))
   }
 
   [Symbol.for('neg')] (): XInteger {

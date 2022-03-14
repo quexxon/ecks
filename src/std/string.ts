@@ -1,9 +1,9 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XArray from './array'
-import XBoolean from './boolean'
-import XInteger from './integer'
-import XOptional from './optional'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XArray from './array.ts'
+import XBoolean from './boolean.ts'
+import XInteger from './integer.ts'
+import XOptional from './optional.ts'
 
 export default class XString {
   static #escapeString (literal: string): string {

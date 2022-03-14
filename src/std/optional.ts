@@ -1,7 +1,7 @@
-import { TypedValue } from '../ast'
-import { State } from '../types'
-import XBoolean from './boolean'
-import XLambda from './lambda'
+import { TypedValue } from '../ast.ts'
+import { State } from '../types.ts'
+import XBoolean from './boolean.ts'
+import XLambda from './lambda.ts'
 
 export default class XOptional {
   kind = 'optional'

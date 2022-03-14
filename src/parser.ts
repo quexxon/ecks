@@ -1,4 +1,4 @@
-import Token, { TokenKind } from './token'
+import Token, { TokenKind } from './token.ts'
 import {
   Expression,
   grouping,
@@ -24,9 +24,9 @@ import {
   index,
   record,
   tuple
-} from './ast'
-import { State } from './types'
-import { UnexpectedEof, UnmatchedOpeningChar } from './error'
+} from './ast.ts'
+import { State } from './types.ts'
+import { UnexpectedEof, UnmatchedOpeningChar } from './error.ts'
 
 export default class Parser {
   #tokens: Token[]
@@ -134,9 +134,10 @@ export default class Parser {
   #method (): Expression {
     let expression: Expression = this.#unary()
 
-    while (this.#match(TokenKind.Dot)) {
+    while (this.#match(TokenKind.Dot) || this.#peek()?.kind === TokenKind.LeftBracket) {
       expression = this.#methodCall(expression)
     }
+
 
     return expression
   }
@@ -149,10 +150,10 @@ export default class Parser {
       return index(expression, indexExpression, offset)
     }
 
-    if (this.#match(TokenKind.LeftParen)) {
+    if (this.#match(TokenKind.LeftBracket)) {
       const indexExpression = this.#expression()
       this.#consume(
-        TokenKind.RightParen,
+        TokenKind.RightBracket,
         'Expected `)` following expression',
         UnmatchedOpeningChar
       )

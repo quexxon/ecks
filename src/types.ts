@@ -1,5 +1,5 @@
-import { TypedValue } from './ast'
-import XRecord from './std/record'
+import { TypedValue } from './ast.ts'
+import XRecord from './std/record.ts'
 
 export interface MethodType {
   arguments: PrimitiveType[]

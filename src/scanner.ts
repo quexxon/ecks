@@ -1,5 +1,5 @@
-import Token, { TokenKind } from './token'
-import { State } from './types'
+import Token, { TokenKind } from './token.ts'
+import { State } from './types.ts'
 
 export default class Scanner {
   #source: string
