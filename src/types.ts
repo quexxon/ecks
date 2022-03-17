@@ -1,38 +1,38 @@
-import { TypedValue } from './ast.ts'
-import XRecord from './std/record.ts'
+import { TypedValue } from "./ast.js";
+import XRecord from "./std/record.js";
 
 export interface MethodType {
-  arguments: PrimitiveType[]
-  call: Function
+    arguments: PrimitiveType[];
+    call(...args: any[]): any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export interface LambdaType {
-  kind: 'lambda'
+    kind: "lambda";
 }
 
 export interface IntegerType {
-  kind: 'integer'
+    kind: "integer";
 }
 
 export interface FloatType {
-  kind: 'float'
+    kind: "float";
 }
 
-export type PrimitiveType
-  = IntegerType
-  | FloatType
-  | LambdaType
+export type PrimitiveType = IntegerType | FloatType | LambdaType;
 
 export const Type: Record<string, PrimitiveType> = {
-  integer: { kind: 'integer' },
-  float: { kind: 'float' }
-}
+    integer: { kind: "integer" },
+    float: { kind: "float" }
+};
 
 export interface State {
-  environment: Environment
-  records: Records
+    environment: Environment;
+    records: Records;
 }
 
-export type Environment = Map<string, TypedValue>
+export type Environment = Map<string, TypedValue>;
 
-export type Records = Map<string, new (value: Map<string, TypedValue>, state: State) => XRecord>
+export type Records = Map<
+    string,
+    new (value: Map<string, TypedValue>, state: State) => XRecord
+>;

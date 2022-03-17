@@ -1,89 +1,96 @@
-import { Expression, Identifier, toString, TypedValue } from '../ast.ts'
-import Interpreter from '../interpreter.ts'
-import { State } from '../types.ts'
-import XArray from './array.ts'
-import XBoolean from './boolean.ts'
+import { Expression, Identifier, toString, TypedValue } from "../ast.js";
+import Interpreter from "../interpreter.js";
+import { State } from "../types.js";
+import XArray from "./array.js";
+import XBoolean from "./boolean.js";
 
 interface Lambda {
-  params: Identifier[]
-  body: Expression
+    params: Identifier[];
+    body: Expression;
 }
 
 export default class XLambda {
-  kind = 'lambda'
-  #value: Lambda
-  #state: State
+    kind = "lambda";
+    #value: Lambda;
+    #state: State;
 
-  constructor (value: Lambda, state: State) {
-    this.#value = value
-    this.#state = state
-  }
-
-  apply (args: XArray): TypedValue {
-    return this.call(...args.__value)
-  }
-
-  call (...args: TypedValue[]): TypedValue {
-    if (args.length !== this.#value.params.length) {
-      throw new Error(`Expected ${this.#value.params.length} arguments`)
+    constructor(value: Lambda, state: State) {
+        this.#value = value;
+        this.#state = state;
     }
 
-    const state: State = {
-      ...this.#state,
-      environment: new Map(this.#state.environment)
-    }
-    for (let i = 0; i < args.length; i++) {
-      const name = this.#value.params[i].name
-      const value = args[i]
-      state.environment.set(name, value)
+    apply(args: XArray): TypedValue {
+        return this.call(...args.__value);
     }
 
-    const interpreter = new Interpreter(this.#value.body, state)
-    return interpreter.render()
-  }
+    call(...args: TypedValue[]): TypedValue {
+        if (args.length !== this.#value.params.length) {
+            throw new Error(`Expected ${this.#value.params.length} arguments`);
+        }
 
-  [Symbol.for('=')] (value: TypedValue): XBoolean {
-    return new XBoolean(this.__eq(value), this.#state)
-  }
+        const state: State = {
+            ...this.#state,
+            environment: new Map(this.#state.environment)
+        };
+        for (let i = 0; i < args.length; i++) {
+            const name = this.#value.params[i].name;
+            const value = args[i];
+            state.environment.set(name, value);
+        }
 
-  [Symbol.for('!=')] (value: TypedValue): XBoolean {
-    return new XBoolean(!this.__eq(value), this.#state)
-  }
+        const interpreter = new Interpreter(this.#value.body, state);
+        return interpreter.render();
+    }
 
-  [Symbol.for('<')] (value: TypedValue): XBoolean {
-    return new XBoolean(this.__lt(value), this.#state)
-  }
+    [Symbol.for("=")](value: TypedValue): XBoolean {
+        return new XBoolean(this.__eq(value), this.#state);
+    }
 
-  [Symbol.for('<=')] (value: TypedValue): XBoolean {
-    return new XBoolean(this.__lt(value) || this.__eq(value), this.#state)
-  }
+    [Symbol.for("!=")](value: TypedValue): XBoolean {
+        return new XBoolean(!this.__eq(value), this.#state);
+    }
 
-  [Symbol.for('>')] (value: TypedValue): XBoolean {
-    return new XBoolean(this.__gt(value), this.#state)
-  }
+    [Symbol.for("<")](value: TypedValue): XBoolean {
+        return new XBoolean(this.__lt(value), this.#state);
+    }
 
-  [Symbol.for('>=')] (value: TypedValue): XBoolean {
-    return new XBoolean(this.__gt(value) || this.__eq(value), this.#state)
-  }
+    [Symbol.for("<=")](value: TypedValue): XBoolean {
+        return new XBoolean(this.__lt(value) || this.__eq(value), this.#state);
+    }
 
-  get __value (): Lambda { return this.#value }
+    [Symbol.for(">")](value: TypedValue): XBoolean {
+        return new XBoolean(this.__gt(value), this.#state);
+    }
 
-  __eq (value: TypedValue): boolean {
-    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
-    return this.__toString() === value.__toString()
-  }
+    [Symbol.for(">=")](value: TypedValue): XBoolean {
+        return new XBoolean(this.__gt(value) || this.__eq(value), this.#state);
+    }
 
-  __lt (value: TypedValue): boolean {
-    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
-    return this.__toString() < value.__toString()
-  }
+    get __value(): Lambda {
+        return this.#value;
+    }
 
-  __gt (value: TypedValue): boolean {
-    if (!(value instanceof XLambda)) throw new TypeError(`Expected ${this.kind}`)
-    return this.__toString() > value.__toString()
-  }
+    __eq(value: TypedValue): boolean {
+        if (!(value instanceof XLambda))
+            throw new TypeError(`Expected ${this.kind}`);
+        return this.__toString() === value.__toString();
+    }
 
-  __toString (): string {
-    return `|${this.#value.params.map(x => x.name).join(' ')}| ${toString(this.#value.body)}`
-  }
+    __lt(value: TypedValue): boolean {
+        if (!(value instanceof XLambda))
+            throw new TypeError(`Expected ${this.kind}`);
+        return this.__toString() < value.__toString();
+    }
+
+    __gt(value: TypedValue): boolean {
+        if (!(value instanceof XLambda))
+            throw new TypeError(`Expected ${this.kind}`);
+        return this.__toString() > value.__toString();
+    }
+
+    __toString(): string {
+        return `|${this.#value.params.map((x) => x.name).join(" ")}| ${toString(
+            this.#value.body
+        )}`;
+    }
 }

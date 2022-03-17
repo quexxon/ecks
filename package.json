@@ -4,12 +4,16 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:transpile": "tsc",
+    "build:dist": "rollup -c",
+    "build": "npm run build:transpile && npm run build:dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^8.3.1",
     "@types/node": "^16.10.3",
     "chalk": "^4.1.2",
     "ts-standard": "^10.0.0",

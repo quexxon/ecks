@@ -2,11 +2,11 @@
   "compilerOptions": {
     "strict": true,
     "target": "ES6",
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "sourceRoot": "src",
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "build",
     "declaration": true,
     "baseUrl": ".",
     "paths": {
