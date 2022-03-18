@@ -1,0 +1,33 @@
+import { TypedValue } from "../ast.js";
+import { State } from "../types.js";
+import XArray from "./array.js";
+import XBoolean from "./boolean.js";
+import XInteger from "./integer.js";
+import XOptional from "./optional.js";
+export default class XString {
+    #private;
+    kind: string;
+    constructor(value: string, state: State);
+    len(): XInteger;
+    at(index: TypedValue): XOptional;
+    pad(length: TypedValue, fill: TypedValue): XString;
+    lpad(length: TypedValue, fill: TypedValue): XString;
+    rpad(length: TypedValue, fill: TypedValue): XString;
+    trim(): XString;
+    ltrim(): XString;
+    rtrim(): XString;
+    lower(): XString;
+    upper(): XString;
+    split(delimiter: TypedValue): XArray;
+    starts(prefix: TypedValue): XBoolean;
+    ends(suffix: TypedValue): XBoolean;
+    has(target: TypedValue): XBoolean;
+    rev(): XString;
+    get __value(): string;
+    get __length(): number;
+    __new(value: string): XString;
+    __eq(value: TypedValue): boolean;
+    __lt(value: TypedValue): boolean;
+    __gt(value: TypedValue): boolean;
+    __toString(): string;
+}
