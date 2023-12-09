@@ -1,4 +1,10 @@
-# Overview
+# Introduction
+
+Ecks is an embedded expression language that can add limited scripting
+capability to applications written in a host language. This reference
+implementation targets JavaScript runtimes.
+
+## Features
 
 - A hosted language
 - Everything is an expression
@@ -7,22 +13,144 @@
 - All types are inferred
 - All types have value equality
 - Emphasis on brevity
-- Optional types instead of `null` - handling is enforced
-- Almost no syntax. Should be learnable in ~5 minutes.
-- Syntax should be familiar to users of Algol-family languages.
-- Immutable data structures
+- Case insensitive
+- Optional types instead of a null value - handling is enforced
+- Almost no syntax - should be learnable in just a few minutes
+- All data structures are immutable
 - No looping constructs, only iterative methods like `map`, `fold` (i.e.
   reduce), and `keep` (i.e. filter)
-- Only built-in types
-- All types support methods (except Lambdas)
-- Operators are syntactic sugar for methods (i.e. `1 + 2` is actually `1.+(2)`)
-- All methods are implemented in the host language
-- All types are implemented in the host language
+- The printable representation of all data types is identical to the literal
+  representation. This means, among other things, that all (valid) examples in
+  this documentation can be copied as-is into the provided REPL and evaluated.
 
-# Expressions
+# Overview
 
 Everything is an expression, meaning that all constructs in the language
 evaluate to a value.
+
+## Data Types
+
+### Integers
+
+Ecks supports integers in decimal (e.g. `16`), octal (e.g. `020`), and
+hexadecimal (e.g. `#10`) notations. The minimum integer value is 0, but the
+maximum value depends on the host language.
+
+### Floats
+
+Ecks also supports floating point numbers. There must be at least one digit
+following the decimal point (e.g. `1.0` is valid, but `1.` is not). E notation
+is supported (e.g. `1.2e3 = 1200.0`). Floating point precision is dependent on
+the host language.
+
+### Booleans
+
+The boolean type contains two values: `true` and `false`. These are keywords.
+
+### Strings
+
+Ecks strings are surrounded by either single quotes, double quotes, or backticks
+(template strings). Character encoding is dependent on the host language.
+
+Examples:
+
+```
+'this is a string'
+"this is also a string"
+```
+
+#### Escape Sequences
+
+The following special escape sequences are provided. When present in a string,
+the escape sequence will be substituted with the indicated character.
+
+```
+\n - newline
+\t - tab
+\\ - backspace
+```
+
+Any other character escaped with a backslash will be preserved verbatim. Most
+significantly, this means that a backslash can be used to include a literal `'`
+in a single quote delimited string, a `"` in a double quote delimited string,
+and a backtick or `{` in a template string.
+
+Examples:
+
+```
+'\t This string contains \n two lines and begins with a tab character.'
+'C:\\Users'
+'This contraction can\'t work without the escaped single quote.'
+```
+
+#### Template Strings
+
+String interpolation is provided via template strings. Within a backtick
+delimited string, an expression may be embedded between an unescaped `{` and a
+`}`. During an expansion step, any embedded expressions will be evaluated and
+replaced with the result of calling the `str` method on the expression (all
+types support the `str` method). Template strings may be nested to any depth.
+
+Examples:
+```
+`1 + 1 = {1 + 1}` = '1 + 1 = 2'
+`cats and {`d{'OG'.lower}s`}` = 'cats and dogs'
+```
+
+## Control Flow
+
+Ecks only provides very basic control flow in the form of two conditional
+expressions and a case analysis expression.
+
+### Conditional Expressions
+
+All condition predicates must resolve to a `bool`. There is no concept of
+truthy/falsy values.
+
+#### Ternary Operator (2 branches)
+
+The ternary operator is a two branch conditional expression. It is analogous to
+an `if` expression in some other languages. If the `CONDITION` is true, then the
+`CONSEQUENT` is evaluated. Otherwise, the `ALTERNATIVE` is evaluated.
+
+Syntax: `CONDITION ? CONSEQUENT : ALTERNATIVE`
+
+Example: `2 = 2 ? 'Math works!' : 'Math is broken!'`
+
+#### Condition Expression (N branches) 
+
+Evaluates to the right-hand side of the first branch whose left-hand side
+evaluates to `true`. If no branch evaluates to `true`, returns the right-hand
+side of the `else` branch (or return `none` when the `else` branch is omitted).
+All expressions must evaluate to the same type. The `else` branch is optional.
+When present, the result will have the same type as the expressions. When
+omitted, the result will be an optional type. To avoid ambiguity in the grammar,
+the `:` is required between the antecedent and consequent - this is a departure
+from the map syntax.
+
+Syntax:
+
+```
+cond {
+  CONDITION : EXPRESSION [,]
+  ...
+  [else : EXPRESSION]
+}
+```
+
+Examples (where `n = 7` and `word = 'fish'`):
+
+```
+cond {
+  n > 10 : "Too high!"
+  n < 5  : "Too low!"
+  else   : "Just right!"
+} = "Just right!"
+
+cond {
+  word.starts('f') : 'f word'
+} = some('f word')
+```
 
 ## Optional Types
 
@@ -36,43 +164,8 @@ must ultimately return a non-optional value. Example:
 [1 2 3].find(|x| x >= 5) ?? 5
 ```
 
-## Conditional Expressions
 
-All condition predicates must resolve to a `bool`. There is no concept of
-truthy/falsy values.
 
-### Ternary Operator (2 branches)
-
-Syntax: `CONDITION ? IF-EXPRESSION : ELSE-EXPRESSION`
-
-Example: `2 = 2 ? "Math works!" : "Math is broken!"`
-
-### Condition Expression (N branches) 
-
-Evaluates to the right-hand side of the first branch whose left-hand side
-evaluates to `true`. If no branches evaluate to `true`, returns the right-hand
-side of the `else` branch. The `else` branch is required to guarantee that the
-expression evaluates.
-
-Syntax:
-
-```
-cond {
-  CONDITION : EXPRESSION [,]
-  ...
-  else : EXPRESSION
-}
-```
-
-Example:
-
-```
-cond {
-  x > 10 : "Too high!"
-  x < 5  : "Too low!"
-  else   : "Just right!"
-}
-```
 
 ### Case Expression
 
@@ -158,8 +251,8 @@ Where `arr = [1 4 3 11]`:
 
 ```
 arr.all(|x| x > 10)          // false
-arr.some(|x| x > 10)         // true
-arr.none(|x| x > 10)         // false
+arr.any(|x| x > 10)          // true
+arr.nany(|x| x > 10)         // false  i.e., not any
 arr.keep(|x| x < 10)         // [1 4 3]
 arr.drop(|x| x < 10)         // [11]
 arr[0] ?? 0                  // 1 - syntactic sugar for .at
