@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Migrated to [quexxon/ecks](https://codeberg.org/quexxon/ecks) on Codeberg.
+
 # Introduction
 
 Ecks is an embedded expression language that can add limited scripting
